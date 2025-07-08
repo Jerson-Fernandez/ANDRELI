@@ -617,6 +617,47 @@
         let clients = [];
         let payments = [];
 
+        // Función para obtener la fecha y hora en zona horaria peruana (UTC-5)
+        function getPeruvianDate(date = new Date()) {
+            // Crear una fecha en UTC-5 (horario de Perú)
+            const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+            const peruTime = new Date(utc + (-5 * 3600000));
+            return peruTime;
+        }
+
+        // Función para obtener solo la fecha en formato YYYY-MM-DD en horario peruano
+        function getPeruvianDateString(date = new Date()) {
+            const peruDate = getPeruvianDate(date);
+            return peruDate.toISOString().split('T')[0];
+        }
+
+        // Función para obtener fecha y hora completa en formato ISO pero en horario peruano
+        function getPeruvianISOString(date = new Date()) {
+            const peruDate = getPeruvianDate(date);
+            return peruDate.toISOString();
+        }
+
+        // Función para formatear hora en horario peruano
+        function formatPeruvianTime(dateString) {
+            const date = new Date(dateString);
+            const peruDate = getPeruvianDate(date);
+            return peruDate.toLocaleTimeString('es-PE', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        // Función para formatear fecha en horario peruano
+        function formatPeruvianDate(dateString) {
+            const date = new Date(dateString + 'T00:00:00');
+            return date.toLocaleDateString('es-PE', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+        }
+
         // Clientes del Excel
         const excelClients = [
             {id: "3524", name: "DE LA PUENTE FLORES, NANCY", phone: "990441351", disbursementDate: "2025-05-30", frequency: "DIARIO"},
@@ -676,7 +717,7 @@
                             phone: excelClient.phone,
                             disbursementDate: excelClient.disbursementDate,
                             frequency: excelClient.frequency,
-                            createdAt: new Date().toISOString()
+                            createdAt: getPeruvianISOString()
                         });
                     }
                 });
@@ -754,9 +795,9 @@
             localStorage.setItem('payments', JSON.stringify(payments));
         }
 
-        // Establecer fecha de hoy
+        // Establecer fecha de hoy en horario peruano
         function setToday() {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getPeruvianDateString();
             document.getElementById('dateFilter').value = today;
             updateDisplay();
         }
@@ -864,7 +905,7 @@
                                 <span class="payment-amount">$${payment.amount.toFixed(2)}</span>
                             </div>
                             <div class="payment-details">
-                                <span>${new Date(payment.timestamp).toLocaleTimeString()}</span>
+                                <span>${formatPeruvianTime(payment.timestamp)}</span>
                                 <button class="btn-danger" onclick="deletePayment('${payment.id}')">Eliminar</button>
                             </div>
                         </div>
@@ -968,7 +1009,7 @@
                 phone: phone,
                 disbursementDate: disbursementDate,
                 frequency: frequency,
-                createdAt: new Date().toISOString()
+                createdAt: getPeruvianISOString()
             };
             
             clients.push(newClient);
@@ -999,7 +1040,7 @@
                 method: method,
                 note: note,
                 date: date,
-                timestamp: new Date().toISOString()
+                timestamp: getPeruvianISOString()
             };
             
             payments.push(newPayment);
@@ -1035,7 +1076,7 @@
             
             let nextPaymentDate = 'N/A';
             if (client.disbursementDate) {
-                const today = new Date();
+                const today = getPeruvianDate();
                 const tomorrow = new Date(today);
                 tomorrow.setDate(tomorrow.getDate() + 1);
                 
@@ -1051,7 +1092,7 @@
                 }
             }
             
-            alert(`Cliente: ${client.name}\nID: ${client.id}\nTeléfono: ${client.phone || 'No registrado'}\nFecha de desembolso: ${client.disbursementDate ? new Date(client.disbursementDate).toLocaleDateString('es-PE') : 'N/A'}\nFrecuencia: ${client.frequency || 'N/A'}\nPróximo pago: ${nextPaymentDate}\n\nTotal pagado (histórico): $${totalPaid.toFixed(2)}\nNúmero de pagos: ${clientPayments.length}`);
+            alert(`Cliente: ${client.name}\nID: ${client.id}\nTeléfono: ${client.phone || 'No registrado'}\nFecha de desembolso: ${client.disbursementDate ? formatPeruvianDate(client.disbursementDate) : 'N/A'}\nFrecuencia: ${client.frequency || 'N/A'}\nPróximo pago: ${nextPaymentDate}\n\nTotal pagado (histórico): $${totalPaid.toFixed(2)}\nNúmero de pagos: ${clientPayments.length}`);
         }
 
         // Event listener para cambio de fecha

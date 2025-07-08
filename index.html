@@ -490,7 +490,7 @@
             <h2 class="section-title">Resumen del Día</h2>
             <div class="stats-grid">
                 <div class="stat-item">
-                    <div class="stat-value" id="totalPaid">$0</div>
+                    <div class="stat-value" id="totalPaid">S/0</div>
                     <div class="stat-label">Total Recibido</div>
                 </div>
                 <div class="stat-item">
@@ -498,11 +498,11 @@
                     <div class="stat-label">Clientes que Pagaron</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value" id="totalCash">$0</div>
+                    <div class="stat-value" id="totalCash">S/0</div>
                     <div class="stat-label">💵 Efectivo</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value" id="totalYape">$0</div>
+                    <div class="stat-value" id="totalYape">S/0</div>
                     <div class="stat-label">📱 Yape</div>
                 </div>
             </div>
@@ -619,29 +619,35 @@
 
         // Función para obtener la fecha y hora en zona horaria peruana (UTC-5)
         function getPeruvianDate(date = new Date()) {
-            // Crear una fecha en UTC-5 (horario de Perú)
-            const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
-            const peruTime = new Date(utc - (5 * 3600000));
+            // Obtener la fecha en zona horaria de Perú usando toLocaleString
+            const peruTime = new Date(date.toLocaleString("en-US", {timeZone: "America/Lima"}));
             return peruTime;
         }
 
         // Función para obtener solo la fecha en formato YYYY-MM-DD en horario peruano
         function getPeruvianDateString(date = new Date()) {
-            const peruDate = getPeruvianDate(date);
-            return peruDate.toISOString().split('T')[0];
+            // Crear fecha en zona horaria de Lima, Perú
+            const options = {
+                timeZone: 'America/Lima',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            };
+            const peruDateStr = date.toLocaleDateString('en-CA', options); // 'en-CA' da formato YYYY-MM-DD
+            return peruDateStr;
         }
 
         // Función para obtener fecha y hora completa en formato ISO pero en horario peruano
         function getPeruvianISOString(date = new Date()) {
-            const peruDate = getPeruvianDate(date);
-            return peruDate.toISOString();
+            // Usar la zona horaria de Lima para obtener la fecha/hora correcta
+            return new Date(date.toLocaleString("en-US", {timeZone: "America/Lima"})).toISOString();
         }
 
         // Función para formatear hora en horario peruano
         function formatPeruvianTime(dateString) {
             const date = new Date(dateString);
-            const peruDate = getPeruvianDate(date);
-            return peruDate.toLocaleTimeString('es-PE', {
+            return date.toLocaleTimeString('es-PE', {
+                timeZone: 'America/Lima',
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit'
@@ -825,10 +831,10 @@
                 .filter(p => p.method === 'yape')
                 .reduce((sum, p) => sum + p.amount, 0);
 
-            document.getElementById('totalPaid').textContent = `$${total.toFixed(2)}`;
+            document.getElementById('totalPaid').textContent = `S/${total.toFixed(2)}`;
             document.getElementById('clientsPaid').textContent = uniqueClients;
-            document.getElementById('totalCash').textContent = `$${cashTotal.toFixed(2)}`;
-            document.getElementById('totalYape').textContent = `$${yapeTotal.toFixed(2)}`;
+            document.getElementById('totalCash').textContent = `S/${cashTotal.toFixed(2)}`;
+            document.getElementById('totalYape').textContent = `S/${yapeTotal.toFixed(2)}`;
         }
 
         // Actualizar lista de clientes
@@ -863,7 +869,7 @@
                                 ${client.name}
                                 <span class="frequency-badge ${freqClass}">${client.frequency}</span>
                             </div>
-                            ${hasPaid ? `<small>Pagó: $${totalPaid.toFixed(2)}</small>` : ''}
+                            ${hasPaid ? `<small>Pagó: S/${totalPaid.toFixed(2)}</small>` : ''}
                         </div>
                         <div>
                             <span class="client-status ${hasPaid ? 'status-paid' : 'status-pending'}">
@@ -902,7 +908,7 @@
                             </div>
                             <div class="payment-details">
                                 <span>${payment.note || 'Sin nota'}</span>
-                                <span class="payment-amount">$${payment.amount.toFixed(2)}</span>
+                                <span class="payment-amount">S/${payment.amount.toFixed(2)}</span>
                             </div>
                             <div class="payment-details">
                                 <span>${formatPeruvianTime(payment.timestamp)}</span>
@@ -1092,7 +1098,7 @@
                 }
             }
             
-            alert(`Cliente: ${client.name}\nID: ${client.id}\nTeléfono: ${client.phone || 'No registrado'}\nFecha de desembolso: ${client.disbursementDate ? formatPeruvianDate(client.disbursementDate) : 'N/A'}\nFrecuencia: ${client.frequency || 'N/A'}\nPróximo pago: ${nextPaymentDate}\n\nTotal pagado (histórico): $${totalPaid.toFixed(2)}\nNúmero de pagos: ${clientPayments.length}`);
+            alert(`Cliente: ${client.name}\nID: ${client.id}\nTeléfono: ${client.phone || 'No registrado'}\nFecha de desembolso: ${client.disbursementDate ? formatPeruvianDate(client.disbursementDate) : 'N/A'}\nFrecuencia: ${client.frequency || 'N/A'}\nPróximo pago: ${nextPaymentDate}\n\nTotal pagado (histórico): S/${totalPaid.toFixed(2)}\nNúmero de pagos: ${clientPayments.length}`);
         }
 
         // Event listener para cambio de fecha

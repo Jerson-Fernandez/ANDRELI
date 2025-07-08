@@ -621,7 +621,7 @@
         function getPeruvianDate(date = new Date()) {
             // Crear una fecha en UTC-5 (horario de Perú)
             const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
-            const peruTime = new Date(utc + (-5 * 3600000));
+            const peruTime = new Date(utc - (5 * 3600000));
             return peruTime;
         }
 

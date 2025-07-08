@@ -459,7 +459,7 @@
             color: #7b1fa2;
         }
 
-        /* Estilos para WhatsApp */
+        /* Estilos para WhatsApp y llamadas */
         .whatsapp-btn {
             background: #25D366;
             color: white;
@@ -481,6 +481,30 @@
 
         .whatsapp-btn:active {
             background: #128C7E;
+            transform: scale(0.95);
+        }
+
+        .call-btn {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            margin-left: 8px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .call-btn:active {
+            background: #0056CC;
             transform: scale(0.95);
         }
 
@@ -696,7 +720,7 @@
         }
 
         // Función para abrir WhatsApp
-        function openWhatsApp(phone, clientName) {
+        function openWhatsApp(phone) {
             if (!phone || phone.trim() === '') {
                 alert('Este cliente no tiene número de teléfono registrado');
                 return;
@@ -712,14 +736,35 @@
                 cleanPhone = '+' + cleanPhone;
             }
             
-            // Mensaje predefinido
-            const message = `Hola ${clientName}, espero que esté bien. Le escribo para recordarle sobre su pago de hoy. ¡Gracias!`;
-            
-            // Crear URL de WhatsApp
-            const whatsappUrl = `https://wa.me/${cleanPhone.replace('+', '')}?text=${encodeURIComponent(message)}`;
+            // Crear URL de WhatsApp sin mensaje
+            const whatsappUrl = `https://wa.me/${cleanPhone.replace('+', '')}`;
             
             // Abrir WhatsApp
             window.open(whatsappUrl, '_blank');
+        }
+
+        // Función para hacer llamada telefónica
+        function makeCall(phone) {
+            if (!phone || phone.trim() === '') {
+                alert('Este cliente no tiene número de teléfono registrado');
+                return;
+            }
+            
+            // Limpiar el número de teléfono (quitar espacios, guiones, paréntesis)
+            let cleanPhone = phone.replace(/\s+/g, '').replace(/[-()]/g, '');
+            
+            // Si el número no comienza con +51, agregarlo (código de país de Perú)
+            if (!cleanPhone.startsWith('+51') && !cleanPhone.startsWith('51')) {
+                cleanPhone = '+51' + cleanPhone;
+            } else if (cleanPhone.startsWith('51') && !cleanPhone.startsWith('+51')) {
+                cleanPhone = '+' + cleanPhone;
+            }
+            
+            // Crear URL para llamada
+            const callUrl = `tel:${cleanPhone}`;
+            
+            // Abrir aplicación de llamadas
+            window.location.href = callUrl;
         }
 
         // Clientes del Excel
@@ -933,7 +978,11 @@
                             <span class="client-status ${hasPaid ? 'status-paid' : 'status-pending'}">
                                 ${hasPaid ? 'Pagó' : 'Pendiente'}
                             </span>
-                            ${client.phone ? `<button class="whatsapp-btn" onclick="openWhatsApp('${client.phone}', '${client.name}'); event.stopPropagation();" title="Enviar mensaje de WhatsApp">
+                            ${client.phone ? `
+                            <button class="call-btn" onclick="makeCall('${client.phone}'); event.stopPropagation();" title="Llamar por teléfono">
+                                📞
+                            </button>
+                            <button class="whatsapp-btn" onclick="openWhatsApp('${client.phone}'); event.stopPropagation();" title="Abrir chat de WhatsApp">
                                 📱
                             </button>` : ''}
                             <button class="btn-danger" onclick="deleteClient('${client.id}', event)">×</button>

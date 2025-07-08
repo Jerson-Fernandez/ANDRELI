@@ -459,6 +459,37 @@
             color: #7b1fa2;
         }
 
+        /* Estilos para WhatsApp */
+        .whatsapp-btn {
+            background: #25D366;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            margin-left: 8px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .whatsapp-btn:active {
+            background: #128C7E;
+            transform: scale(0.95);
+        }
+
+        .client-actions {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
         /* iOS specific styles */
         @supports (-webkit-overflow-scrolling: touch) {
             .payments-container {
@@ -662,6 +693,33 @@
                 month: '2-digit',
                 day: '2-digit'
             });
+        }
+
+        // Función para abrir WhatsApp
+        function openWhatsApp(phone, clientName) {
+            if (!phone || phone.trim() === '') {
+                alert('Este cliente no tiene número de teléfono registrado');
+                return;
+            }
+            
+            // Limpiar el número de teléfono (quitar espacios, guiones, paréntesis)
+            let cleanPhone = phone.replace(/\s+/g, '').replace(/[-()]/g, '');
+            
+            // Si el número no comienza con +51, agregarlo (código de país de Perú)
+            if (!cleanPhone.startsWith('+51') && !cleanPhone.startsWith('51')) {
+                cleanPhone = '+51' + cleanPhone;
+            } else if (cleanPhone.startsWith('51') && !cleanPhone.startsWith('+51')) {
+                cleanPhone = '+' + cleanPhone;
+            }
+            
+            // Mensaje predefinido
+            const message = `Hola ${clientName}, espero que esté bien. Le escribo para recordarle sobre su pago de hoy. ¡Gracias!`;
+            
+            // Crear URL de WhatsApp
+            const whatsappUrl = `https://wa.me/${cleanPhone.replace('+', '')}?text=${encodeURIComponent(message)}`;
+            
+            // Abrir WhatsApp
+            window.open(whatsappUrl, '_blank');
         }
 
         // Clientes del Excel
@@ -871,10 +929,13 @@
                             </div>
                             ${hasPaid ? `<small>Pagó: S/${totalPaid.toFixed(2)}</small>` : ''}
                         </div>
-                        <div>
+                        <div class="client-actions">
                             <span class="client-status ${hasPaid ? 'status-paid' : 'status-pending'}">
                                 ${hasPaid ? 'Pagó' : 'Pendiente'}
                             </span>
+                            ${client.phone ? `<button class="whatsapp-btn" onclick="openWhatsApp('${client.phone}', '${client.name}'); event.stopPropagation();" title="Enviar mensaje de WhatsApp">
+                                📱
+                            </button>` : ''}
                             <button class="btn-danger" onclick="deleteClient('${client.id}', event)">×</button>
                         </div>
                     </div>

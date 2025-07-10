@@ -7,7 +7,7 @@
     
     <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Control Pagos">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#667eea">
@@ -40,8 +40,9 @@
 
         /* Allow text selection only in inputs */
         input, textarea {
-            -webkit-user-select: auto;
-            user-select: auto;
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            -webkit-touch-callout: default !important;
         }
 
         .header {
@@ -337,6 +338,9 @@
             background-color: white;
             /* Better touch handling */
             touch-action: manipulation;
+            /* iOS keyboard fix */
+            -webkit-user-select: text !important;
+            user-select: text !important;
         }
 
         .form-input:focus {
@@ -407,6 +411,10 @@
             margin-bottom: 0;
             background: #f8f9fa;
             border: 1px solid #e0e0e0;
+            /* iOS keyboard fix */
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            -webkit-touch-callout: default !important;
         }
 
         .search-input:focus {
@@ -1711,6 +1719,32 @@
             // Pequeño delay para asegurar que las transiciones funcionen
             requestAnimationFrame(() => {
                 modal.classList.add('show');
+                
+                // FIX iOS PWA: Re-aplicar fix de teclado para inputs en el modal
+                if (window.navigator.standalone) {
+                    setTimeout(() => {
+                        const modalInputs = modal.querySelectorAll('input, textarea, select');
+                        modalInputs.forEach(input => {
+                            input.setAttribute('autocomplete', 'off');
+                            input.style.webkitUserSelect = 'text';
+                            input.style.userSelect = 'text';
+                            
+                            // Remover y re-agregar event listeners
+                            const newInput = input.cloneNode(true);
+                            input.parentNode.replaceChild(newInput, input);
+                            
+                            newInput.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                this.focus();
+                            });
+                            
+                            newInput.addEventListener('touchend', function(e) {
+                                e.preventDefault();
+                                this.focus();
+                            });
+                        });
+                    }, 100);
+                }
             });
         }
 
@@ -2055,6 +2089,101 @@
 
         // Inicializar la aplicación
         init();
+
+        // SOLUCIÓN COMPLETA PARA TECLADO iOS PWA
+        function fixIOSKeyboard() {
+            const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+            
+            if (isStandalone) {
+                // Método 1: Click handler para todos los inputs
+                document.addEventListener('click', function(e) {
+                    if (e.target.matches('input, textarea, select')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Hack contenteditable
+                        e.target.setAttribute('contenteditable', 'true');
+                        e.target.focus();
+                        setTimeout(() => {
+                            e.target.removeAttribute('contenteditable');
+                            e.target.focus();
+                            e.target.click();
+                        }, 10);
+                    }
+                }, true);
+
+                // Método 2: Touch handler específico
+                document.addEventListener('touchstart', function(e) {
+                    if (e.target.matches('input, textarea, select')) {
+                        e.target.style.transform = 'translateZ(0)';
+                        e.target.focus();
+                    }
+                }, {passive: false});
+
+                // Método 3: Touchend handler
+                document.addEventListener('touchend', function(e) {
+                    if (e.target.matches('input, textarea, select')) {
+                        e.preventDefault();
+                        e.target.focus();
+                        
+                        // Simular click después de touchend
+                        setTimeout(() => {
+                            const clickEvent = new MouseEvent('click', {
+                                view: window,
+                                bubbles: true,
+                                cancelable: true
+                            });
+                            e.target.dispatchEvent(clickEvent);
+                        }, 0);
+                    }
+                }, false);
+
+                // Método 4: Focus handler con readonly hack
+                document.addEventListener('focus', function(e) {
+                    if (e.target.matches('input:not([readonly]), textarea:not([readonly])')) {
+                        e.target.setAttribute('readonly', 'readonly');
+                        setTimeout(function() {
+                            e.target.removeAttribute('readonly');
+                            e.target.focus();
+                        }, 50);
+                    }
+                }, true);
+            }
+
+            // Para todos los dispositivos iOS (PWA y navegador)
+            document.querySelectorAll('input, textarea, select').forEach(el => {
+                el.setAttribute('autocomplete', 'off');
+                el.setAttribute('autocorrect', 'off');
+                el.setAttribute('autocapitalize', 'off');
+                el.style.webkitUserSelect = 'text';
+                el.style.userSelect = 'text';
+                el.style.transform = 'translateZ(0)';
+                
+                // Event listeners individuales
+                el.addEventListener('touchstart', function(e) {
+                    this.style.fontSize = '16px';
+                    this.focus();
+                }, {passive: true});
+                
+                el.addEventListener('click', function(e) {
+                    this.focus();
+                });
+            });
+        }
+
+        // Ejecutar fix cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', fixIOSKeyboard);
+        } else {
+            fixIOSKeyboard();
+        }
+
+        // También ejecutar después de un pequeño delay
+        setTimeout(fixIOSKeyboard, 500);
+        
+        // Re-ejecutar después de cada actualización del DOM
+        const observer = new MutationObserver(fixIOSKeyboard);
+        observer.observe(document.body, {childList: true, subtree: true});
     </script>
 </body>
 </html>

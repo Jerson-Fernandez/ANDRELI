@@ -2,24 +2,24 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Control de Pagos Diarios</title>
     
     <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Control Pagos">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#667eea">
-    
-    <!-- Prevent zoom on input focus -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
     
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
         }
 
         body {
@@ -28,8 +28,20 @@
             color: #333;
             min-height: 100vh;
             overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
             /* Prevent pull-to-refresh on iOS */
-            overscroll-behavior: contain;
+            overscroll-behavior-y: contain;
+            /* Prevent text selection */
+            -webkit-user-select: none;
+            user-select: none;
+            /* Smooth scrolling */
+            scroll-behavior: smooth;
+        }
+
+        /* Allow text selection only in inputs */
+        input, textarea {
+            -webkit-user-select: text;
+            user-select: text;
         }
 
         .header {
@@ -39,7 +51,10 @@
             text-align: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             /* Safe area for iPhone notch */
-            padding-top: max(20px, env(safe-area-inset-top));
+            padding-top: calc(20px + env(safe-area-inset-top));
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .header h1 {
@@ -52,7 +67,7 @@
             max-width: 600px;
             margin: 0 auto;
             /* Safe area for iPhone bottom */
-            padding-bottom: max(20px, env(safe-area-inset-bottom));
+            padding-bottom: calc(20px + env(safe-area-inset-bottom));
         }
 
         .stats-card {
@@ -127,10 +142,13 @@
             /* Prevent iOS button styling */
             -webkit-appearance: none;
             appearance: none;
+            /* Better touch feedback */
+            touch-action: manipulation;
         }
 
         .btn-primary:active {
             transform: scale(0.98);
+            opacity: 0.9;
         }
 
         .btn-secondary {
@@ -163,7 +181,11 @@
             border-bottom: 1px solid #f0f0f0;
             cursor: pointer;
             transition: background 0.2s;
-            display: block;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 60px; /* Better touch target for iOS */
+            -webkit-tap-highlight-color: rgba(0,0,0,0.1);
         }
 
         .client-item:active {
@@ -232,6 +254,8 @@
             background: rgba(0,0,0,0.5);
             z-index: 1000;
             animation: fadeIn 0.3s;
+            -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
         }
 
         @keyframes fadeIn {
@@ -241,14 +265,19 @@
 
         .modal-content {
             background: white;
-            margin: 50px auto;
+            margin: 20px;
             padding: 20px;
-            width: 90%;
+            width: calc(100% - 40px);
             max-width: 500px;
             border-radius: 15px;
             animation: slideIn 0.3s;
-            max-height: 90vh;
+            max-height: calc(100vh - 40px);
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
 
         @keyframes slideIn {
@@ -294,15 +323,26 @@
             padding: 12px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 16px; /* Prevents zoom on iOS */
             transition: border 0.2s;
             -webkit-appearance: none;
             appearance: none;
+            background-color: white;
+            /* Better touch handling */
+            touch-action: manipulation;
         }
 
         .form-input:focus {
             outline: none;
             border-color: #667eea;
+            /* Prevent iOS zoom */
+            font-size: 16px;
+        }
+
+        /* Specific style for date inputs on iOS */
+        input[type="date"] {
+            min-height: 44px; /* iOS recommended touch target */
+            padding: 12px;
         }
 
         .payment-history {
@@ -537,7 +577,17 @@
         .client-actions {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        /* Better button sizes for iOS */
+        .client-actions button {
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         /* NUEVOS ESTILOS AGREGADOS */
@@ -818,6 +868,50 @@
                     <input type="number" class="form-input" id="clientTerm" min="1" required>
                 </div>
                 <button type="submit" class="btn-primary">Agregar Cliente</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Editar Cliente -->
+    <div id="editClientModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Modificar Cliente</h3>
+                <button class="close-btn" onclick="closeModal('editClientModal')">&times;</button>
+            </div>
+            <form onsubmit="updateClient(event)">
+                <input type="hidden" id="editClientId">
+                <div class="form-group">
+                    <label class="form-label">Nombre del Cliente</label>
+                    <input type="text" class="form-input" id="editClientName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Teléfono (opcional)</label>
+                    <input type="tel" class="form-input" id="editClientPhone">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fecha de Desembolso</label>
+                    <input type="date" class="form-input" id="editClientDisbursementDate" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Frecuencia de Pago</label>
+                    <select class="form-input" id="editClientFrequency" required>
+                        <option value="">Seleccionar frecuencia...</option>
+                        <option value="DIARIO">Diario</option>
+                        <option value="SEMANAL">Semanal</option>
+                        <option value="QUINCENAL">Quincenal</option>
+                        <option value="MENSUAL">Mensual</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Monto de Cuota</label>
+                    <input type="number" class="form-input" id="editClientQuota" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Plazo (número de cuotas)</label>
+                    <input type="number" class="form-input" id="editClientTerm" min="1" required>
+                </div>
+                <button type="submit" class="btn-primary">Guardar Cambios</button>
             </form>
         </div>
     </div>
@@ -1724,6 +1818,61 @@
             } else {
                 alert('Todos los clientes ya tienen sus cuotas actualizadas');
             }
+        }
+
+        // NUEVA FUNCIÓN: Mostrar modal de editar cliente
+        function showEditClientModal(clientId) {
+            const client = clients.find(c => c.id === clientId);
+            if (!client) return;
+            
+            document.getElementById('editClientId').value = client.id;
+            document.getElementById('editClientName').value = client.name;
+            document.getElementById('editClientPhone').value = client.phone || '';
+            document.getElementById('editClientDisbursementDate').value = client.disbursementDate || '';
+            document.getElementById('editClientFrequency').value = client.frequency || '';
+            document.getElementById('editClientQuota').value = client.quota || '';
+            document.getElementById('editClientTerm').value = client.term || '';
+            
+            showModal('editClientModal');
+        }
+
+        // NUEVA FUNCIÓN: Actualizar cliente
+        function updateClient(event) {
+            event.preventDefault();
+            
+            const clientId = document.getElementById('editClientId').value;
+            const client = clients.find(c => c.id === clientId);
+            
+            if (!client) return;
+            
+            client.name = document.getElementById('editClientName').value.trim();
+            client.phone = document.getElementById('editClientPhone').value.trim();
+            client.disbursementDate = document.getElementById('editClientDisbursementDate').value;
+            client.frequency = document.getElementById('editClientFrequency').value;
+            client.quota = parseFloat(document.getElementById('editClientQuota').value);
+            client.term = parseInt(document.getElementById('editClientTerm').value);
+            
+            saveData();
+            updateDisplay();
+            closeModal('editClientModal');
+            alert('Cliente actualizado exitosamente');
+        }
+
+        // NUEVA FUNCIÓN: Pago rápido
+        function quickPayment(clientId) {
+            const client = clients.find(c => c.id === clientId);
+            if (!client) return;
+            
+            const date = document.getElementById('dateFilter').value;
+            
+            // Configurar el modal de pago con los datos del cliente
+            document.getElementById('clientSearchModal').value = client.name;
+            document.getElementById('selectedClientId').value = client.id;
+            document.getElementById('paymentAmount').value = client.quota || '';
+            document.getElementById('paymentMethod').value = 'efectivo'; // Por defecto efectivo
+            document.getElementById('paymentNote').value = 'Pago rápido';
+            
+            showModal('addPaymentModal');
         }
 
         // Inicializar la aplicación

@@ -251,11 +251,17 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0);
             z-index: 1000;
-            animation: fadeIn 0.3s;
-            -webkit-backdrop-filter: blur(5px);
-            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(0px);
+            backdrop-filter: blur(0px);
+            transition: all 0.3s ease;
+        }
+
+        .modal.show {
+            background: rgba(0,0,0,0.5);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
         }
 
         @keyframes fadeIn {
@@ -733,6 +739,54 @@
 
         .schedule-table .future {
             background: white;
+        }
+
+        /* Modal especial para cronograma con animación más lenta */
+        #scheduleModal .modal-content {
+            max-width: 800px;
+        }
+
+        /* Efecto de pulso al abrir */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 20px rgba(102, 126, 234, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+            }
+        }
+
+        /* Animación para botones */
+        .btn-primary, .btn-secondary, .btn-circle {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .btn-primary:active, .btn-secondary:active, .btn-circle:active {
+            transform: scale(0.95);
+        }
+
+        .btn-primary:hover, .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-circle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Animación para items de cliente */
+        .client-item {
+            transition: all 0.3s ease;
+        }
+
+        .client-item:hover {
+            transform: translateX(5px);
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
         }
 
         /* Estilos para botones circulares */
@@ -1327,7 +1381,7 @@
                 
                 <div class="action-buttons">
                     <button class="btn-action btn-schedule" onclick="showPaymentSchedule('${client.id}')">
-                        📅 Cronograma
+                        📅 Crono
                     </button>
                     ${client.phone ? `
                         <button class="btn-action btn-call" onclick="makeCall('${client.phone}')">
@@ -1624,14 +1678,42 @@
             }
         }
 
-        // Mostrar modal
+        // Mostrar modal con animación mejorada
         function showModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'block';
+            
+            // Prevenir scroll del body en iOS
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            
+            // Pequeño delay para asegurar que las transiciones funcionen
+            requestAnimationFrame(() => {
+                modal.classList.add('show');
+            });
         }
 
-        // Cerrar modal
+        // Cerrar modal con animación mejorada
         function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
+            const modal = document.getElementById(modalId);
+            const modalContent = modal.querySelector('.modal-content');
+            
+            // Agregar clase de cierre para animación
+            modalContent.classList.add('closing');
+            modal.classList.remove('show');
+            
+            // Esperar a que termine la animación antes de ocultar
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modalContent.classList.remove('closing');
+            }, 300);
+            
+            // Restaurar scroll del body
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            
             // Limpiar campos del modal de pago
             if (modalId === 'addPaymentModal') {
                 document.getElementById('clientSearchModal').value = '';
@@ -1749,7 +1831,8 @@
         // Cerrar modales al hacer clic fuera
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) {
-                event.target.style.display = 'none';
+                const modalId = event.target.id;
+                closeModal(modalId);
             }
         }
 

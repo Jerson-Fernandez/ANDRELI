@@ -20,7 +20,464 @@
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
+                
         }
+
+        // Actualizar lista de pagos (MODIFICADO para incluir ID)
+        function updatePaymentsList(date) {
+            const paymentsList = document.getElementById('paymentsList');
+            const dayPayments = payments.filter(p => p.date === date);
+            
+            if (dayPayments.length === 0) {
+                paymentsList.innerHTML = '<div class="empty-state">No hay pagos registrados</div>';
+                return;
+            }
+
+            paymentsList.innerHTML = dayPayments
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                .map(payment => {
+                    const client = clients.find(c => c.id === payment.clientId);
+                    const methodIcon = payment.method === 'yape' ? '📱' : '💵';
+                    const methodClass = payment.method === 'yape' ? 'method-yape' : 'method-efectivo';
+                    const methodText = payment.method === 'yape' ? 'Yape' : 'Efectivo';
+                    
+                    return `
+                        <div class="payment-item">
+                            <div class="payment-id">ID: ${client ? client.id : 'N/A'}</div>
+                            <div class="payment-client">
+                                ${client ? client.name : 'Cliente eliminado'}
+                                <span class="payment-method ${methodClass}">${methodIcon} ${methodText}</span>
+                            </div>
+                            <div class="payment-details">
+                                <span>${payment.note || 'Sin nota'}</span>
+                                <span class="payment-amount">S/${payment.amount.toFixed(2)}</span>
+                            </div>
+                            <div class="payment-details">
+                                <span>${formatPeruvianTime(payment.timestamp)}</span>
+                                <button class="btn-danger" onclick="deletePayment('${payment.id}')">Eliminar</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+        }
+
+        // Mostrar dropdown de clientes
+        function showClientDropdown() {
+            const dropdown = document.getElementById('clientDropdown');
+            dropdown.style.display = 'block';
+            filterModalClients();
+        }
+
+        // Ocultar dropdown de clientes
+        function hideClientDropdown() {
+            const dropdown = document.getElementById('clientDropdown');
+            dropdown.style.display = 'none';
+        }
+
+        // Filtrar clientes en el modal
+        function filterModalClients() {
+            const searchTerm = document.getElementById('clientSearchModal').value.toLowerCase();
+            const dropdown = document.getElementById('clientDropdown');
+            
+            const filteredClients = clients.filter(client => 
+                client.name.toLowerCase().includes(searchTerm) ||
+                (client.phone && client.phone.includes(searchTerm))
+            );
+
+            if (filteredClients.length === 0) {
+                dropdown.innerHTML = '<div class="no-results">No se encontraron clientes</div>';
+            } else {
+                dropdown.innerHTML = filteredClients.map(client => `
+                    <div class="dropdown-item" onclick="selectClient('${client.id}', '${client.name}', ${client.quota || 0})">
+                        <div class="dropdown-item-name">${client.name}</div>
+                        ${client.phone ? `<div class="dropdown-item-phone">${client.phone}</div>` : ''}
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Seleccionar cliente del dropdown (MODIFICADO para auto-completar cuota)
+        function selectClient(clientId, clientName, quota) {
+            document.getElementById('selectedClientId').value = clientId;
+            document.getElementById('clientSearchModal').value = clientName;
+            hideClientDropdown();
+            
+            // Auto-completar el monto con la cuota del cliente
+            if (quota && quota > 0) {
+                document.getElementById('paymentAmount').value = quota;
+            }
+        }
+
+        // Mostrar modal con animación mejorada
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'block';
+            
+            // Prevenir scroll del body en iOS
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            
+            // Pequeño delay para asegurar que las transiciones funcionen
+            requestAnimationFrame(() => {
+                modal.classList.add('show');
+            });
+        }
+
+        // Cerrar modal con animación mejorada
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const modalContent = modal.querySelector('.modal-content');
+            
+            // Agregar clase de cierre para animación
+            modalContent.classList.add('closing');
+            modal.classList.remove('show');
+            
+            // Esperar a que termine la animación antes de ocultar
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modalContent.classList.remove('closing');
+            }, 300);
+            
+            // Restaurar scroll del body
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            
+            // Limpiar campos del modal de pago
+            if (modalId === 'addPaymentModal') {
+                document.getElementById('clientSearchModal').value = '';
+                document.getElementById('selectedClientId').value = '';
+                hideClientDropdown();
+            }
+        }
+
+        // Mostrar modal de agregar cliente
+        function showAddClientModal() {
+            document.getElementById('clientName').value = '';
+            document.getElementById('clientPhone').value = '';
+            document.getElementById('clientDisbursementDate').value = '';
+            document.getElementById('clientFrequency').value = '';
+            document.getElementById('clientQuota').value = '';
+            document.getElementById('clientTerm').value = '';
+            showModal('addClientModal');
+        }
+
+        // Mostrar modal de agregar pago
+        function showAddPaymentModal() {
+            if (clients.length === 0) {
+                alert('Primero debes agregar al menos un cliente');
+                return;
+            }
+            document.getElementById('clientSearchModal').value = '';
+            document.getElementById('selectedClientId').value = '';
+            document.getElementById('paymentAmount').value = '';
+            document.getElementById('paymentMethod').value = '';
+            document.getElementById('paymentNote').value = '';
+            showModal('addPaymentModal');
+        }
+
+        // Agregar cliente (MODIFICADO para incluir cuota y plazo)
+        function addClient(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('clientName').value.trim();
+            const phone = document.getElementById('clientPhone').value.trim();
+            const disbursementDate = document.getElementById('clientDisbursementDate').value;
+            const frequency = document.getElementById('clientFrequency').value;
+            const quota = parseFloat(document.getElementById('clientQuota').value);
+            const term = parseInt(document.getElementById('clientTerm').value);
+            
+            const newClient = {
+                id: Date.now().toString(),
+                name: name,
+                phone: phone,
+                disbursementDate: disbursementDate,
+                frequency: frequency,
+                quota: quota,
+                term: term,
+                createdAt: getPeruvianISOString()
+            };
+            
+            clients.push(newClient);
+            saveData();
+            updateDisplay();
+            closeModal('addClientModal');
+        }
+
+        // Agregar pago
+        function addPayment(event) {
+            event.preventDefault();
+            
+            const clientId = document.getElementById('selectedClientId').value;
+            const amount = parseFloat(document.getElementById('paymentAmount').value);
+            const method = document.getElementById('paymentMethod').value;
+            const note = document.getElementById('paymentNote').value.trim();
+            const date = document.getElementById('dateFilter').value;
+            
+            if (!clientId) {
+                alert('Por favor selecciona un cliente de la lista');
+                return;
+            }
+            
+            const newPayment = {
+                id: Date.now().toString(),
+                clientId: clientId,
+                amount: amount,
+                method: method,
+                note: note,
+                date: date,
+                timestamp: getPeruvianISOString()
+            };
+            
+            payments.push(newPayment);
+            saveData();
+            updateDisplay();
+            closeModal('addPaymentModal');
+        }
+
+        // Eliminar cliente
+        function deleteClient(clientId, event) {
+            event.stopPropagation();
+            if (confirm('¿Estás seguro de eliminar este cliente? Se mantendrán los pagos históricos.')) {
+                clients = clients.filter(c => c.id !== clientId);
+                saveData();
+                updateDisplay();
+            }
+        }
+
+        // Eliminar pago
+        function deletePayment(paymentId) {
+            if (confirm('¿Estás seguro de eliminar este pago?')) {
+                payments = payments.filter(p => p.id !== paymentId);
+                saveData();
+                updateDisplay();
+            }
+        }
+
+        // Event listener para cambio de fecha
+        document.getElementById('dateFilter').addEventListener('change', updateDisplay);
+
+        // Cerrar modales al hacer clic fuera
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                const modalId = event.target.id;
+                closeModal(modalId);
+            }
+        }
+
+        // Prevenir zoom en iOS cuando se hace focus en inputs
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        });
+
+        // Fix simple para iOS PWA - similar a nuevo.html
+        if (window.navigator.standalone) {
+            // Para iOS PWA, asegurar que los inputs funcionen correctamente
+            document.addEventListener('click', function(e) {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                    e.target.focus();
+                }
+            });
+        }
+
+        // NUEVA FUNCIÓN: Mostrar cronograma de pagos
+        function showPaymentSchedule(clientId) {
+            const client = clients.find(c => c.id === clientId);
+            if (!client || !client.disbursementDate || !client.term) {
+                alert('No se puede generar el cronograma. Faltan datos del cliente.');
+                return;
+            }
+            
+            const clientPayments = payments.filter(p => p.clientId === clientId);
+            
+            // Generar todas las fechas de pago
+            const paymentDates = [];
+            const startDate = new Date(client.disbursementDate + 'T00:00:00');
+            let currentDate = new Date(startDate);
+            let paymentCount = 0;
+            
+            while (paymentCount < client.term) {
+                if (shouldPayOnDate(client, currentDate.toISOString().split('T')[0])) {
+                    paymentDates.push(new Date(currentDate));
+                    paymentCount++;
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+                
+                // Evitar bucle infinito
+                if (currentDate > new Date(startDate.getTime() + (365 * 24 * 60 * 60 * 1000))) {
+                    break;
+                }
+            }
+            
+            // Generar contenido del cronograma
+            let scheduleHTML = `
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 0;">Cliente: ${client.name}</h4>
+                    <p style="margin: 5px 0; color: #666;">ID: ${client.id}</p>
+                </div>
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>N°</th>
+                            <th>Fecha</th>
+                            <th>Monto</th>
+                            <th>Estado</th>
+                            <th>Pagado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            const today = getPeruvianDateString();
+            let totalPagado = 0;
+            
+            paymentDates.forEach((date, index) => {
+                const dateStr = date.toISOString().split('T')[0];
+                const formattedDate = formatPeruvianDate(dateStr);
+                
+                // Buscar pagos en esa fecha
+                const paymentsOnDate = clientPayments.filter(p => p.date === dateStr);
+                const amountPaid = paymentsOnDate.reduce((sum, p) => sum + p.amount, 0);
+                totalPagado += amountPaid;
+                
+                let status = '';
+                let statusClass = '';
+                
+                if (paymentsOnDate.length > 0) {
+                    status = 'Pagado';
+                    statusClass = 'paid';
+                } else if (dateStr < today) {
+                    status = 'Vencido';
+                    statusClass = 'pending';
+                } else if (dateStr === today) {
+                    status = 'Hoy';
+                    statusClass = 'pending';
+                } else {
+                    status = 'Pendiente';
+                    statusClass = 'future';
+                }
+                
+                scheduleHTML += `
+                    <tr class="${statusClass}">
+                        <td>${index + 1}</td>
+                        <td>${formattedDate}</td>
+                        <td>S/${client.quota.toFixed(2)}</td>
+                        <td>${status}</td>
+                        <td>${amountPaid > 0 ? `S/${amountPaid.toFixed(2)}` : '-'}</td>
+                    </tr>
+                `;
+            });
+            
+            const totalEsperado = client.quota * client.term;
+            const saldoPendiente = totalEsperado - totalPagado;
+            
+            scheduleHTML += `
+                    </tbody>
+                </table>
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <strong>Total esperado:</strong>
+                        <span>S/${totalEsperado.toFixed(2)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <strong>Total pagado:</strong>
+                        <span style="color: #28a745;">S/${totalPagado.toFixed(2)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <strong>Saldo pendiente:</strong>
+                        <span style="color: #dc3545;">S/${saldoPendiente.toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+            
+            // Mostrar en el modal de cronograma
+            document.getElementById('scheduleModalContent').innerHTML = scheduleHTML;
+            showModal('scheduleModal');
+        }
+
+        // Función para actualizar cuotas de clientes existentes
+        function updateQuotas() {
+            let updated = 0;
+            excelClients.forEach(excelClient => {
+                const existingClient = clients.find(c => c.id === excelClient.id);
+                if (existingClient && (!existingClient.quota || existingClient.quota === 0)) {
+                    existingClient.quota = excelClient.quota;
+                    updated++;
+                }
+            });
+            
+            if (updated > 0) {
+                saveData();
+                updateDisplay();
+                alert(`Se actualizaron las cuotas de ${updated} clientes`);
+            } else {
+                alert('Todos los clientes ya tienen sus cuotas actualizadas');
+            }
+        }
+
+        // NUEVA FUNCIÓN: Mostrar modal de editar cliente
+        function showEditClientModal(clientId) {
+            const client = clients.find(c => c.id === clientId);
+            if (!client) return;
+            
+            document.getElementById('editClientId').value = client.id;
+            document.getElementById('editClientName').value = client.name;
+            document.getElementById('editClientPhone').value = client.phone || '';
+            document.getElementById('editClientDisbursementDate').value = client.disbursementDate || '';
+            document.getElementById('editClientFrequency').value = client.frequency || '';
+            document.getElementById('editClientQuota').value = client.quota || '';
+            document.getElementById('editClientTerm').value = client.term || '';
+            
+            showModal('editClientModal');
+        }
+
+        // NUEVA FUNCIÓN: Actualizar cliente
+        function updateClient(event) {
+            event.preventDefault();
+            
+            const clientId = document.getElementById('editClientId').value;
+            const client = clients.find(c => c.id === clientId);
+            
+            if (!client) return;
+            
+            client.name = document.getElementById('editClientName').value.trim();
+            client.phone = document.getElementById('editClientPhone').value.trim();
+            client.disbursementDate = document.getElementById('editClientDisbursementDate').value;
+            client.frequency = document.getElementById('editClientFrequency').value;
+            client.quota = parseFloat(document.getElementById('editClientQuota').value);
+            client.term = parseInt(document.getElementById('editClientTerm').value);
+            
+            saveData();
+            updateDisplay();
+            closeModal('editClientModal');
+            alert('Cliente actualizado exitosamente');
+        }
+
+        // NUEVA FUNCIÓN: Pago rápido
+        function quickPayment(clientId) {
+            const client = clients.find(c => c.id === clientId);
+            if (!client) return;
+            
+            const date = document.getElementById('dateFilter').value;
+            
+            // Configurar el modal de pago con los datos del cliente
+            document.getElementById('clientSearchModal').value = client.name;
+            document.getElementById('selectedClientId').value = client.id;
+            document.getElementById('paymentAmount').value = client.quota || '';
+            document.getElementById('paymentMethod').value = 'efectivo'; // Por defecto efectivo
+            document.getElementById('paymentNote').value = 'Pago rápido';
+            
+            showModal('addPaymentModal');
+        }
+
+        // Inicializar la aplicación
+        init();
+    </script>
+</body>
+</html>
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
@@ -468,14 +925,6 @@
         .form-group {
             margin-bottom: 20px;
             position: relative;
-        }
-
-        /* MODIFICADO: Con altura fija para mostrar solo 6 clientes */
-        .clients-container {
-            height: 480px; /* Altura para mostrar aproximadamente 6 clientes */
-            overflow-y: auto;
-            overflow-x: hidden; /* Prevenir scroll horizontal */
-            -webkit-overflow-scrolling: touch;
         }
 
         /* MODIFICADO: Con altura fija para mostrar exactamente 6 clientes */

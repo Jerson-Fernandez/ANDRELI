@@ -879,6 +879,19 @@
         </div>
     </div>
 
+    <!-- NUEVO: Modal de Cronograma de Pagos -->
+    <div id="scheduleModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Cronograma de Pagos</h3>
+                <button class="close-btn" onclick="closeModal('scheduleModal')">&times;</button>
+            </div>
+            <div id="scheduleModalContent">
+                <!-- El contenido del cronograma se llenará dinámicamente -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // Estado de la aplicación
         let clients = [];
@@ -1164,10 +1177,6 @@
                     <button class="btn-action btn-close-detail" onclick="closeModal('clientDetailsModal')">
                         Cerrar
                     </button>
-                </div>
-                
-                <div id="scheduleContainer" style="display: none;">
-                    <!-- Aquí se mostrará el cronograma -->
                 </div>
             `;
             
@@ -1618,7 +1627,6 @@
                 return;
             }
             
-            const container = document.getElementById('scheduleContainer');
             const clientPayments = payments.filter(p => p.clientId === clientId);
             
             // Generar todas las fechas de pago
@@ -1640,9 +1648,12 @@
                 }
             }
             
-            // Generar tabla de cronograma
+            // Generar contenido del cronograma
             let scheduleHTML = `
-                <h3 style="margin-top: 20px; margin-bottom: 15px;">Cronograma de Pagos</h3>
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 0;">Cliente: ${client.name}</h4>
+                    <p style="margin: 5px 0; color: #666;">ID: ${client.id}</p>
+                </div>
                 <table class="schedule-table">
                     <thead>
                         <tr>
@@ -1702,20 +1713,25 @@
             scheduleHTML += `
                     </tbody>
                 </table>
-                <div style="margin-top: 15px; text-align: right;">
-                    <div><strong>Total esperado:</strong> S/${totalEsperado.toFixed(2)}</div>
-                    <div><strong>Total pagado:</strong> S/${totalPagado.toFixed(2)}</div>
-                    <div><strong>Saldo pendiente:</strong> S/${saldoPendiente.toFixed(2)}</div>
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <strong>Total esperado:</strong>
+                        <span>S/${totalEsperado.toFixed(2)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <strong>Total pagado:</strong>
+                        <span style="color: #28a745;">S/${totalPagado.toFixed(2)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <strong>Saldo pendiente:</strong>
+                        <span style="color: #dc3545;">S/${saldoPendiente.toFixed(2)}</span>
+                    </div>
                 </div>
             `;
             
-            container.innerHTML = scheduleHTML;
-            container.style.display = 'block';
-            
-            // Hacer scroll al cronograma
-            setTimeout(() => {
-                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
+            // Mostrar en el modal de cronograma
+            document.getElementById('scheduleModalContent').innerHTML = scheduleHTML;
+            showModal('scheduleModal');
         }
 
         // Función para actualizar cuotas de clientes existentes

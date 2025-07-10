@@ -735,16 +735,85 @@
             background: white;
         }
 
+        /* Estilos para botones circulares */
+        .btn-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
+            flex-shrink: 0;
+        }
+
+        .btn-circle:active {
+            transform: scale(0.95);
+        }
+
+        .btn-edit {
+            background: #007AFF;
+            color: white;
+        }
+
+        .btn-pay {
+            background: #34C759;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #FF3B30;
+            color: white;
+        }
+
         /* iOS specific styles */
         @supports (-webkit-overflow-scrolling: touch) {
-            .payments-container {
+            .payments-container,
+            .clients-container,
+            .search-results,
+            .modal-content {
                 -webkit-overflow-scrolling: touch;
             }
-            .clients-container {
-                -webkit-overflow-scrolling: touch;
+            
+            /* Fix for iOS Safari input zoom */
+            input[type="text"],
+            input[type="number"],
+            input[type="tel"],
+            input[type="date"],
+            select,
+            textarea {
+                font-size: 16px !important;
             }
-            .search-results {
-                -webkit-overflow-scrolling: touch;
+            
+            /* Better scrolling performance */
+            .schedule-table {
+                -webkit-transform: translateZ(0);
+                transform: translateZ(0);
+            }
+        }
+        
+        /* iPhone 12 Pro specific adjustments */
+        @media only screen 
+        and (device-width: 390px) 
+        and (device-height: 844px) 
+        and (-webkit-device-pixel-ratio: 3) {
+            .container {
+                padding: 15px;
+            }
+            
+            .client-item {
+                padding: 18px 12px;
+            }
+            
+            .btn-primary,
+            .btn-secondary {
+                font-size: 15px;
+                padding: 14px 24px;
             }
         }
     </style>
@@ -1438,26 +1507,32 @@
                 }[client.frequency];
 
                 return `
-                    <div class="client-item" onclick="showClientDetailsModal('${client.id}')">
-                        <div>
-                            <div class="client-name">
+                    <div class="client-item" style="padding: 20px 15px; display: block;">
+                        <div onclick="showClientDetailsModal('${client.id}')">
+                            <div style="font-weight: 600; font-size: 16px; color: #333; margin-bottom: 8px;">
                                 ${client.name}
-                                <span class="frequency-badge ${freqClass}">${client.frequency}</span>
-                                ${client.quota ? `<span class="client-quota">S/${client.quota.toFixed(2)}</span>` : ''}
                             </div>
-                            ${hasPaid ? `<small>Pagó: S/${totalPaid.toFixed(2)}</small>` : ''}
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 5px;">
+                                <span class="client-status ${hasPaid ? 'status-paid' : 'status-pending'}">
+                                    ${hasPaid ? 'Pagó' : 'Pendiente'}
+                                </span>
+                                <span class="frequency-badge ${freqClass}" style="text-transform: uppercase; font-size: 11px;">
+                                    ${client.frequency}
+                                </span>
+                                ${client.quota ? `<span class="client-quota" style="font-size: 14px;">S/${client.quota.toFixed(2)}</span>` : ''}
+                            </div>
+                            ${hasPaid ? `<div style="font-size: 12px; color: #666; margin-bottom: 15px;">Pagó: S/${totalPaid.toFixed(2)}</div>` : '<div style="margin-bottom: 15px;"></div>'}
                         </div>
-                        <div class="client-actions">
-                            <span class="client-status ${hasPaid ? 'status-paid' : 'status-pending'}">
-                                ${hasPaid ? 'Pagó' : 'Pendiente'}
-                            </span>
-                            <button class="btn-secondary" onclick="showEditClientModal('${client.id}'); event.stopPropagation();" title="Modificar cliente" style="padding: 6px 12px; font-size: 13px;">
+                        <div style="display: flex; gap: 12px; justify-content: flex-start; margin-top: 15px;">
+                            <button class="btn-circle btn-edit" onclick="showEditClientModal('${client.id}'); event.stopPropagation();" title="Modificar cliente">
                                 ✏️
                             </button>
-                            <button class="btn-primary" onclick="quickPayment('${client.id}'); event.stopPropagation();" title="Pago rápido" style="padding: 6px 12px; font-size: 13px;">
+                            <button class="btn-circle btn-pay" onclick="quickPayment('${client.id}'); event.stopPropagation();" title="Pago rápido">
                                 💰
                             </button>
-                            <button class="btn-danger" onclick="deleteClient('${client.id}', event)">×</button>
+                            <button class="btn-circle btn-delete" onclick="deleteClient('${client.id}', event)" title="Eliminar">
+                                ×
+                            </button>
                         </div>
                     </div>
                 `;

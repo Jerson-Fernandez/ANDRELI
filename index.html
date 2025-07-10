@@ -1,2060 +1,266 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Control de Pagos Diarios</title>
-    
-    <!-- PWA Meta Tags -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Control Pagos">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#667eea">
-    <meta name="format-detection" content="telephone=no">
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
-            min-height: 100vh;
-            overflow-x: hidden;
-            -webkit-overflow-scrolling: touch;
-            /* Prevent pull-to-refresh on iOS */
-            overscroll-behavior-y: contain;
-            /* Prevent text selection */
-            -webkit-user-select: none;
-            user-select: none;
-            /* Smooth scrolling */
-            scroll-behavior: smooth;
-        }
-
-        /* Allow text selection only in inputs */
-        input, textarea {
-            -webkit-user-select: text;
-            user-select: text;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            /* Safe area for iPhone notch */
-            padding-top: calc(20px + env(safe-area-inset-top));
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .header h1 {
-            font-size: 24px;
-            font-weight: 600;
-        }
-
-        .container {
-            padding: 20px;
-            max-width: 600px;
-            margin: 0 auto;
-            /* Safe area for iPhone bottom */
-            padding-bottom: calc(20px + env(safe-area-inset-bottom));
-        }
-
-        .stats-card {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .payment-method {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 500;
-            margin-left: 8px;
-        }
-
-        .method-efectivo {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-
-        .method-yape {
-            background: #e3f2fd;
-            color: #1565c0;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 10px;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 28px;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .stat-label {
-            font-size: 14px;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            width: 100%;
-            cursor: pointer;
-            transition: transform 0.2s;
-            margin-bottom: 15px;
-            /* Prevent iOS button styling */
-            -webkit-appearance: none;
-            appearance: none;
-            /* Better touch feedback */
-            touch-action: manipulation;
-        }
-
-        .btn-primary:active {
-            transform: scale(0.98);
-            opacity: 0.9;
-        }
-
-        .btn-secondary {
-            background: #f0f0f0;
-            color: #333;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.2s;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-
-        .btn-secondary:active {
-            background: #e0e0e0;
-        }
-
-        .client-list {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .client-item {
-            padding: 20px 15px;
-            border-bottom: 1px solid #f0f0f0;
-            cursor: pointer;
-            transition: background 0.2s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            min-height: 60px; /* Better touch target for iOS */
-            -webkit-tap-highlight-color: rgba(0,0,0,0.1);
-        }
-
-        .client-item:active {
-            background: #f9f9f9;
-        }
-
-        .client-item:last-child {
-            border-bottom: none;
-        }
-
-        .client-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
-        }
-
-        .client-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .client-name {
-            font-weight: 600;
-            color: #333;
-            font-size: 16px;
-            line-height: 1.3;
-            margin-bottom: 5px;
-            word-wrap: break-word;
-        }
-
-        .client-payment-info {
-            font-size: 13px;
-            color: #666;
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .client-status {
-            font-size: 12px;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-
-        .status-paid {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0);
-            z-index: 1000;
-            transition: background-color 0.25s ease-out;
-        }
-
-        .modal.show {
-            background: rgba(0,0,0,0.5);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .modal-content {
-            background: white;
-            padding: 20px;
-            width: calc(100% - 40px);
-            max-width: 500px;
-            border-radius: 15px;
-            max-height: calc(100vh - 40px);
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            animation: slideIn 0.3s;
-        }
-
-        @keyframes slideIn {
-            from { 
-                transform: translate(-50%, -50%) translateY(-50px); 
-                opacity: 0; 
-            }
-            to { 
-                transform: translate(-50%, -50%) translateY(0); 
-                opacity: 1; 
-            }
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        .close-btn {
-            font-size: 24px;
-            cursor: pointer;
-            color: #999;
-            background: none;
-            border: none;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #333;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px; /* Prevents zoom on iOS */
-            transition: border 0.2s;
-            -webkit-appearance: none;
-            appearance: none;
-            background-color: white;
-            /* Better touch handling */
-            touch-action: manipulation;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #667eea;
-            /* Prevent iOS zoom */
-            font-size: 16px;
-        }
-
-        /* Specific style for date inputs on iOS */
-        input[type="date"] {
-            min-height: 44px; /* iOS recommended touch target */
-            padding: 12px;
-        }
-
-        .payment-history {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .payments-container {
-            max-height: 320px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .payment-item {
-            padding: 12px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .payment-item:last-child {
-            border-bottom: none;
-        }
-
-        .payment-client {
-            font-weight: 500;
-            color: #333;
-        }
-
-        .payment-details {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 5px;
-            font-size: 14px;
-            color: #666;
-        }
-
-        .payment-amount {
-            color: #28a745;
-            font-weight: 600;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-        }
-
-        .search-container {
-            margin-bottom: 15px;
-        }
-
-        .search-input {
-            margin-bottom: 0;
-            background: #f8f9fa;
-            border: 1px solid #e0e0e0;
-        }
-
-        .search-input:focus {
-            background: white;
-            border-color: #667eea;
-        }
-
-        .client-item.hidden {
-            display: none;
-        }
-
-        .client-dropdown {
-            position: absolute;
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1001;
-            width: 100%;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
-        .dropdown-item {
-            padding: 12px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-            transition: background 0.2s;
-        }
-
-        .dropdown-item:hover {
-            background: #f8f9fa;
-        }
-
-        .dropdown-item:last-child {
-            border-bottom: none;
-        }
-
-        .dropdown-item-name {
-            font-weight: 500;
-            color: #333;
-        }
-
-        .dropdown-item-phone {
-            font-size: 12px;
-            color: #666;
-            margin-top: 2px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        /* MODIFICADO: Sin altura fija, comportamiento normal de scroll */
-        .clients-container {
-            /* Removido height fijo */
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .no-results {
-            text-align: center;
-            padding: 20px;
-            color: #999;
-            font-style: italic;
-        }
-
-        .date-filter {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            margin-left: 10px;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-
-        .btn-danger:active {
-            background: #c82333;
-        }
-
-        .frequency-badge {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 500;
-            margin-left: 5px;
-        }
-
-        .freq-diario {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-
-        .freq-semanal {
-            background: #e3f2fd;
-            color: #1565c0;
-        }
-
-        .freq-quincenal {
-            background: #fce4ec;
-            color: #c2185b;
-        }
-
-        .freq-mensual {
-            background: #f3e5f5;
-            color: #7b1fa2;
-        }
-
-        /* Estilos para WhatsApp y llamadas */
-        .whatsapp-btn {
-            background: #25D366;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 50%;
-            font-size: 16px;
-            cursor: pointer;
-            margin-left: 8px;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s, transform 0.2s;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-
-        .whatsapp-btn:active {
-            background: #128C7E;
-            transform: scale(0.95);
-        }
-
-        .call-btn {
-            background: #007AFF;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 50%;
-            font-size: 16px;
-            cursor: pointer;
-            margin-left: 8px;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s, transform 0.2s;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-
-        .call-btn:active {
-            background: #0056CC;
-            transform: scale(0.95);
-        }
-
-        .client-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-
-        /* Better button sizes for iOS */
-        .client-actions button {
-            min-width: 44px;
-            min-height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* NUEVOS ESTILOS AGREGADOS */
-        .client-quota {
-            background: #f0f4ff;
-            color: #1a5490;
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-
-        .payment-id {
-            font-size: 11px;
-            color: #999;
-            margin-bottom: 3px;
-        }
-
-        .general-search-container {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .search-results {
-            margin-top: 15px;
-            max-height: 300px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .search-result-item {
-            padding: 15px;
-            border-bottom: 1px solid #f0f0f0;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .search-result-item:hover {
-            background: #f9f9f9;
-        }
-
-        .search-result-item:last-child {
-            border-bottom: none;
-        }
-
-        .client-detail-info {
-            margin-top: 15px;
-            padding: 15px;
-            background: #f9f9f9;
-            border-radius: 8px;
-        }
-
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-
-        .detail-label {
-            font-weight: 500;
-            color: #666;
-        }
-
-        .detail-value {
-            color: #333;
-            font-weight: 600;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-
-        .btn-action {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            -webkit-appearance: none;
-            appearance: none;
-            min-width: 80px;
-        }
-
-        .btn-call {
-            background: #007AFF;
-            color: white;
-        }
-
-        .btn-whatsapp {
-            background: #25D366;
-            color: white;
-        }
-
-        .btn-close-detail {
-            background: #f0f0f0;
-            color: #333;
-        }
-
-        .btn-schedule {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-edit-client {
-            background: #FFA500;
-            color: white;
-        }
-
-        .btn-delete-client {
-            background: #FF3B30;
-            color: white;
-        }
-
-        .schedule-table {
-            margin-top: 20px;
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .schedule-table th,
-        .schedule-table td {
-            padding: 10px;
-            border: 1px solid #e0e0e0;
-            text-align: left;
-        }
-
-        .schedule-table th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .schedule-table tr:nth-child(even) {
-            background: #f8f9fa;
-        }
-
-        .schedule-table .paid {
-            background: #d4edda;
-        }
-
-        .schedule-table .pending {
-            background: #fff3cd;
-        }
-
-        .schedule-table .future {
-            background: white;
-        }
-
-        /* Modal especial para cronograma con animación más lenta */
-        #scheduleModal .modal-content {
-            max-width: 800px;
-        }
-
-        /* Efecto de pulso al abrir */
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
-            }
-            70% {
-                box-shadow: 0 0 0 20px rgba(102, 126, 234, 0);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
-            }
-        }
-
-        /* Animación para botones */
-        .btn-primary, .btn-secondary, .btn-circle {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-        }
-
-        .btn-primary:active, .btn-secondary:active, .btn-circle:active {
-            transform: scale(0.95);
-        }
-
-        .btn-primary:hover, .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-circle:hover {
-            transform: scale(1.1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Animación para items de cliente */
-        .client-item {
-            transition: all 0.3s ease;
-        }
-
-        .client-item:hover {
-            transform: translateX(5px);
-            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Estilos para botones circulares */
-        .btn-circle {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            cursor: pointer;
-            transition: all 0.2s;
-            -webkit-appearance: none;
-            appearance: none;
-            flex-shrink: 0;
-        }
-
-        .btn-circle:active {
-            transform: scale(0.95);
-        }
-
-        .btn-edit {
-            background: #007AFF;
-            color: white;
-        }
-
-        .btn-pay {
-            background: #34C759;
-            color: white;
-        }
-
-        .btn-delete {
-            background: #FF3B30;
-            color: white;
-        }
-
-        /* iOS specific styles */
-        @supports (-webkit-overflow-scrolling: touch) {
-            .payments-container,
-            .clients-container,
-            .search-results,
-            .modal-content {
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            /* Fix for iOS Safari input zoom */
-            input[type="text"],
-            input[type="number"],
-            input[type="tel"],
-            input[type="date"],
-            select,
-            textarea {
-                font-size: 16px !important;
-            }
-            
-            /* Better scrolling performance */
-            .schedule-table {
-                -webkit-transform: translateZ(0);
-                transform: translateZ(0);
-            }
-        }
-        
-        /* iPhone 12 Pro specific adjustments */
-        @media only screen 
-        and (device-width: 390px) 
-        and (device-height: 844px) 
-        and (-webkit-device-pixel-ratio: 3) {
-            .container {
-                padding: 15px;
-            }
-            
-            .client-item {
-                padding: 18px 12px;
-            }
-            
-            .btn-primary,
-            .btn-secondary {
-                font-size: 15px;
-                padding: 14px 24px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Control de Pagos Diarios</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Control Pagos">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#667eea">
+<meta name="format-detection" content="telephone=no">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background-color:#f5f5f5;color:#333;min-height:100vh;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;-webkit-user-select:none;user-select:none;scroll-behavior:smooth}
+input,textarea{-webkit-user-select:text;user-select:text}
+.header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:20px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.1);padding-top:calc(20px + env(safe-area-inset-top));position:sticky;top:0;z-index:100}
+.header h1{font-size:24px;font-weight:600}
+.container{padding:20px;max-width:600px;margin:0 auto;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+.stats-card{background:white;border-radius:15px;padding:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
+.payment-method{display:inline-block;padding:3px 8px;border-radius:6px;font-size:12px;font-weight:500;margin-left:8px}
+.method-efectivo{background:#e8f5e9;color:#2e7d32}
+.method-yape{background:#e3f2fd;color:#1565c0}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:10px}
+.stat-item{text-align:center}
+.stat-value{font-size:28px;font-weight:bold;color:#667eea}
+.stat-label{font-size:14px;color:#666;margin-top:5px}
+.section-title{font-size:18px;font-weight:600;margin-bottom:15px;color:#333}
+.btn-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;padding:15px 30px;border-radius:10px;font-size:16px;font-weight:600;width:100%;cursor:pointer;transition:transform 0.2s;margin-bottom:15px;-webkit-appearance:none;appearance:none;touch-action:manipulation}
+.btn-primary:active{transform:scale(0.98);opacity:0.9}
+.btn-secondary{background:#f0f0f0;color:#333;border:none;padding:12px 20px;border-radius:8px;font-size:14px;cursor:pointer;transition:background 0.2s;-webkit-appearance:none;appearance:none}
+.btn-secondary:active{background:#e0e0e0}
+.client-list{background:white;border-radius:15px;padding:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
+.client-item{padding:20px 15px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.2s;display:flex;justify-content:space-between;align-items:center;min-height:60px;-webkit-tap-highlight-color:rgba(0,0,0,0.1)}
+.client-item:active{background:#f9f9f9}
+.client-item:last-child{border-bottom:none}
+.client-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.client-info{flex:1;min-width:0}
+.client-name{font-weight:600;color:#333;font-size:16px;line-height:1.3;margin-bottom:5px;word-wrap:break-word}
+.client-payment-info{font-size:13px;color:#666;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.client-status{font-size:12px;padding:4px 10px;border-radius:12px;font-weight:500;white-space:nowrap}
+.status-paid{background:#d4edda;color:#155724}
+.status-pending{background:#fff3cd;color:#856404}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0);z-index:1000;transition:background-color 0.25s ease-out}
+.modal.show{background:rgba(0,0,0,0.5)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-content{background:white;padding:20px;width:calc(100% - 40px);max-width:500px;border-radius:15px;max-height:calc(100vh - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);animation:slideIn 0.3s}
+@keyframes slideIn{from{transform:translate(-50%,-50%) translateY(-50px);opacity:0}to{transform:translate(-50%,-50%) translateY(0);opacity:1}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-title{font-size:20px;font-weight:600}
+.close-btn{font-size:24px;cursor:pointer;color:#999;background:none;border:none;-webkit-appearance:none;appearance:none}
+.form-group{margin-bottom:20px;position:relative}
+.form-label{display:block;margin-bottom:8px;font-weight:500;color:#333}
+.form-input{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:16px;transition:border 0.2s;-webkit-appearance:none;appearance:none;background-color:white;touch-action:manipulation}
+.form-input:focus{outline:none;border-color:#667eea;font-size:16px}
+input[type="date"]{min-height:44px;padding:12px}
+.payment-history{background:white;border-radius:15px;padding:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
+.payments-container{max-height:320px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.payment-item{padding:12px;border-bottom:1px solid #f0f0f0}
+.payment-item:last-child{border-bottom:none}
+.payment-client{font-weight:500;color:#333}
+.payment-details{display:flex;justify-content:space-between;margin-top:5px;font-size:14px;color:#666}
+.payment-amount{color:#28a745;font-weight:600}
+.empty-state{text-align:center;padding:40px;color:#999}
+.search-container{margin-bottom:15px}
+.search-input{margin-bottom:0;background:#f8f9fa;border:1px solid #e0e0e0}
+.search-input:focus{background:white;border-color:#667eea}
+.client-item.hidden{display:none}
+.client-dropdown{position:absolute;background:white;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:1001;width:100%;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
+.dropdown-item{padding:12px;cursor:pointer;border-bottom:1px solid #f0f0f0;transition:background 0.2s}
+.dropdown-item:hover{background:#f8f9fa}
+.dropdown-item:last-child{border-bottom:none}
+.dropdown-item-name{font-weight:500;color:#333}
+.dropdown-item-phone{font-size:12px;color:#666;margin-top:2px}
+.clients-container{max-height:480px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.no-results{text-align:center;padding:20px;color:#999;font-style:italic}
+.date-filter{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:15px;background:white;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
+.btn-danger{background:#dc3545;color:white;border:none;padding:8px 16px;border-radius:6px;font-size:14px;cursor:pointer;margin-left:10px;-webkit-appearance:none;appearance:none}
+.btn-danger:active{background:#c82333}
+.frequency-badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:500;margin-left:5px}
+.freq-diario{background:#e8f5e9;color:#2e7d32}
+.freq-semanal{background:#e3f2fd;color:#1565c0}
+.freq-quincenal{background:#fce4ec;color:#c2185b}
+.freq-mensual{background:#f3e5f5;color:#7b1fa2}
+.whatsapp-btn{background:#25D366;color:white;border:none;padding:8px 12px;border-radius:50%;font-size:16px;cursor:pointer;margin-left:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;transition:background 0.2s,transform 0.2s;-webkit-appearance:none;appearance:none}
+.whatsapp-btn:active{background:#128C7E;transform:scale(0.95)}
+.call-btn{background:#007AFF;color:white;border:none;padding:8px 12px;border-radius:50%;font-size:16px;cursor:pointer;margin-left:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;transition:background 0.2s,transform 0.2s;-webkit-appearance:none;appearance:none}
+.call-btn:active{background:#0056CC;transform:scale(0.95)}
+.client-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.client-actions button{min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center}
+.client-quota{background:#f0f4ff;color:#1a5490;padding:2px 8px;border-radius:6px;font-size:13px;font-weight:600;margin-left:8px}
+.payment-id{font-size:11px;color:#999;margin-bottom:3px}
+.general-search-container{background:white;border-radius:15px;padding:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
+.search-results{margin-top:15px;max-height:300px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.search-result-item{padding:15px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.2s}
+.search-result-item:hover{background:#f9f9f9}
+.search-result-item:last-child{border-bottom:none}
+.client-detail-info{margin-top:15px;padding:15px;background:#f9f9f9;border-radius:8px}
+.detail-row{display:flex;justify-content:space-between;margin-bottom:10px;font-size:14px}
+.detail-label{font-weight:500;color:#666}
+.detail-value{color:#333;font-weight:600}
+.action-buttons{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}
+.btn-action{flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s;-webkit-appearance:none;appearance:none;min-width:80px}
+.btn-call{background:#007AFF;color:white}
+.btn-whatsapp{background:#25D366;color:white}
+.btn-close-detail{background:#f0f0f0;color:#333}
+.btn-schedule{background:#6c757d;color:white}
+.btn-edit-client{background:#FFA500;color:white}
+.btn-delete-client{background:#FF3B30;color:white}
+.schedule-table{margin-top:20px;width:100%;border-collapse:collapse}
+.schedule-table th,.schedule-table td{padding:10px;border:1px solid #e0e0e0;text-align:left}
+.schedule-table th{background:#f8f9fa;font-weight:600;color:#333}
+.schedule-table tr:nth-child(even){background:#f8f9fa}
+.schedule-table .paid{background:#d4edda}
+.schedule-table .pending{background:#fff3cd}
+.schedule-table .future{background:white}
+#scheduleModal .modal-content{max-width:800px}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(102,126,234,0.7)}70%{box-shadow:0 0 0 20px rgba(102,126,234,0)}100%{box-shadow:0 0 0 0 rgba(102,126,234,0)}}
+.btn-primary,.btn-secondary,.btn-circle{transition:all 0.2s cubic-bezier(0.4,0,0.2,1);position:relative}
+.btn-primary:active,.btn-secondary:active,.btn-circle:active{transform:scale(0.95)}
+.btn-primary:hover,.btn-secondary:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(102,126,234,0.3)}
+.btn-circle:hover{transform:scale(1.1);box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+.client-item{transition:all 0.3s ease}
+.client-item:hover{transform:translateX(5px);box-shadow:-5px 0 20px rgba(0,0,0,0.1)}
+.btn-circle{width:40px;height:40px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:all 0.2s;-webkit-appearance:none;appearance:none;flex-shrink:0}
+.btn-circle:active{transform:scale(0.95)}
+.btn-edit{background:#007AFF;color:white}
+.btn-pay{background:#34C759;color:white}
+.btn-delete{background:#FF3B30;color:white}
+@supports (-webkit-overflow-scrolling:touch){.payments-container,.clients-container,.search-results,.modal-content{-webkit-overflow-scrolling:touch}input[type="text"],input[type="number"],input[type="tel"],input[type="date"],select,textarea{font-size:16px!important}.schedule-table{-webkit-transform:translateZ(0);transform:translateZ(0)}}
+@media only screen and (device-width:390px) and (device-height:844px) and (-webkit-device-pixel-ratio:3){.container{padding:15px}.client-item{padding:18px 12px}.btn-primary,.btn-secondary{font-size:15px;padding:14px 24px}}
+</style>
 </head>
 <body>
-    <div class="header">
-        <h1>Control de Pagos</h1>
-    </div>
-
-    <div class="container">
-        <!-- Filtro de fecha -->
-        <div class="date-filter">
-            <div>
-                <label for="dateFilter" class="form-label">Fecha:</label>
-                <input type="date" id="dateFilter" class="form-input" style="width: auto;">
-            </div>
-            <button class="btn-secondary" onclick="setToday()">Hoy</button>
-        </div>
-
-        <!-- Estadísticas del día -->
-        <div class="stats-card">
-            <h2 class="section-title">Resumen del Día</h2>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-value" id="totalPaid">S/0</div>
-                    <div class="stat-label">Total Recibido</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="clientsPaid">0</div>
-                    <div class="stat-label">Clientes que Pagaron</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="totalCash">S/0</div>
-                    <div class="stat-label">💵 Efectivo</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="totalYape">S/0</div>
-                    <div class="stat-label">📱 Yape</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- NUEVO: Buscador general de clientes -->
-        <div class="general-search-container">
-            <h2 class="section-title">Buscar Cliente</h2>
-            <div class="search-container">
-                <input type="text" 
-                       class="form-input search-input" 
-                       id="generalClientSearch" 
-                       placeholder="🔍 Buscar por nombre, ID o teléfono..."
-                       onkeyup="searchAllClients()">
-            </div>
-            <div id="searchResults" class="search-results" style="display: none;">
-                <!-- Aquí se mostrarán los resultados de búsqueda -->
-            </div>
-        </div>
-
-        <!-- Botones principales -->
-        <button class="btn-primary" onclick="showAddClientModal()">➕ Agregar Cliente</button>
-        <button class="btn-primary" onclick="showAddPaymentModal()">💰 Registrar Pago</button>
-
-        <!-- Lista de clientes -->
-        <div class="client-list">
-            <h2 class="section-title">Clientes del Día</h2>
-            <div class="clients-container" id="clientsContainer">
-                <div id="clientsList">
-                    <div class="empty-state">No hay clientes registrados</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Historial de pagos -->
-        <div class="payment-history">
-            <h2 class="section-title">Pagos del Día</h2>
-            <div class="payments-container" id="paymentsContainer">
-                <div id="paymentsList">
-                    <div class="empty-state">No hay pagos registrados</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Agregar Cliente -->
-    <div id="addClientModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Agregar Cliente</h3>
-                <button class="close-btn" onclick="closeModal('addClientModal')">&times;</button>
-            </div>
-            <form onsubmit="addClient(event)">
-                <div class="form-group">
-                    <label class="form-label">Nombre del Cliente</label>
-                    <input type="text" class="form-input" id="clientName" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Teléfono (opcional)</label>
-                    <input type="tel" class="form-input" id="clientPhone">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Fecha de Desembolso</label>
-                    <input type="date" class="form-input" id="clientDisbursementDate" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Frecuencia de Pago</label>
-                    <select class="form-input" id="clientFrequency" required>
-                        <option value="">Seleccionar frecuencia...</option>
-                        <option value="DIARIO">Diario</option>
-                        <option value="SEMANAL">Semanal</option>
-                        <option value="QUINCENAL">Quincenal</option>
-                        <option value="MENSUAL">Mensual</option>
-                    </select>
-                </div>
-                <!-- NUEVO: Campo de cuota -->
-                <div class="form-group">
-                    <label class="form-label">Monto de Cuota</label>
-                    <input type="number" class="form-input" id="clientQuota" step="0.01" required>
-                </div>
-                <!-- NUEVO: Campo de plazo -->
-                <div class="form-group">
-                    <label class="form-label">Plazo (número de cuotas)</label>
-                    <input type="number" class="form-input" id="clientTerm" min="1" required>
-                </div>
-                <button type="submit" class="btn-primary">Agregar Cliente</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Editar Cliente -->
-    <div id="editClientModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Modificar Cliente</h3>
-                <button class="close-btn" onclick="closeModal('editClientModal')">&times;</button>
-            </div>
-            <form onsubmit="updateClient(event)">
-                <input type="hidden" id="editClientId">
-                <div class="form-group">
-                    <label class="form-label">Nombre del Cliente</label>
-                    <input type="text" class="form-input" id="editClientName" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Teléfono (opcional)</label>
-                    <input type="tel" class="form-input" id="editClientPhone">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Fecha de Desembolso</label>
-                    <input type="date" class="form-input" id="editClientDisbursementDate" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Frecuencia de Pago</label>
-                    <select class="form-input" id="editClientFrequency" required>
-                        <option value="">Seleccionar frecuencia...</option>
-                        <option value="DIARIO">Diario</option>
-                        <option value="SEMANAL">Semanal</option>
-                        <option value="QUINCENAL">Quincenal</option>
-                        <option value="MENSUAL">Mensual</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Monto de Cuota</label>
-                    <input type="number" class="form-input" id="editClientQuota" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Plazo (número de cuotas)</label>
-                    <input type="number" class="form-input" id="editClientTerm" min="1" required>
-                </div>
-                <button type="submit" class="btn-primary">Guardar Cambios</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Registrar Pago -->
-    <div id="addPaymentModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Registrar Pago</h3>
-                <button class="close-btn" onclick="closeModal('addPaymentModal')">&times;</button>
-            </div>
-            <form onsubmit="addPayment(event)">
-                <div class="form-group">
-                    <label class="form-label">Cliente</label>
-                    <input type="text" 
-                           class="form-input" 
-                           id="clientSearchModal" 
-                           placeholder="🔍 Buscar y seleccionar cliente..."
-                           autocomplete="off"
-                           onkeyup="filterModalClients()"
-                           onfocus="showClientDropdown()"
-                           required>
-                    <input type="hidden" id="selectedClientId" required>
-                    <div id="clientDropdown" class="client-dropdown" style="display: none;">
-                        <!-- Aquí se mostrarán los clientes filtrados -->
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Monto</label>
-                    <input type="number" class="form-input" id="paymentAmount" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Método de Pago</label>
-                    <select class="form-input" id="paymentMethod" required>
-                        <option value="">Seleccionar método...</option>
-                        <option value="efectivo">💵 Efectivo</option>
-                        <option value="yape">📱 Yape</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Nota (opcional)</label>
-                    <input type="text" class="form-input" id="paymentNote">
-                </div>
-                <button type="submit" class="btn-primary">Registrar Pago</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- NUEVO: Modal de Detalles del Cliente -->
-    <div id="clientDetailsModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Detalles del Cliente</h3>
-                <button class="close-btn" onclick="closeModal('clientDetailsModal')">&times;</button>
-            </div>
-            <div id="clientDetailsContent">
-                <!-- El contenido se llenará dinámicamente -->
-            </div>
-        </div>
-    </div>
-
-    <!-- NUEVO: Modal de Cronograma de Pagos -->
-    <div id="scheduleModal" class="modal">
-        <div class="modal-content" style="max-width: 800px;">
-            <div class="modal-header">
-                <h3 class="modal-title">Cronograma de Pagos</h3>
-                <button class="close-btn" onclick="closeModal('scheduleModal')">&times;</button>
-            </div>
-            <div id="scheduleModalContent">
-                <!-- El contenido del cronograma se llenará dinámicamente -->
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Estado de la aplicación
-        let clients = [];
-        let payments = [];
-
-        // Función para obtener la fecha y hora en zona horaria peruana (UTC-5)
-        function getPeruvianDate(date = new Date()) {
-            // Obtener la fecha en zona horaria de Perú usando toLocaleString
-            const peruTime = new Date(date.toLocaleString("en-US", {timeZone: "America/Lima"}));
-            return peruTime;
-        }
-
-        // Función para obtener solo la fecha en formato YYYY-MM-DD en horario peruano
-        function getPeruvianDateString(date = new Date()) {
-            // Crear fecha en zona horaria de Lima, Perú
-            const options = {
-                timeZone: 'America/Lima',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-            };
-            const peruDateStr = date.toLocaleDateString('en-CA', options); // 'en-CA' da formato YYYY-MM-DD
-            return peruDateStr;
-        }
-
-        // Función para obtener fecha y hora completa en formato ISO pero en horario peruano
-        function getPeruvianISOString(date = new Date()) {
-            // Usar la zona horaria de Lima para obtener la fecha/hora correcta
-            return new Date(date.toLocaleString("en-US", {timeZone: "America/Lima"})).toISOString();
-        }
-
-        // Función para formatear hora en horario peruano
-        function formatPeruvianTime(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleTimeString('es-PE', {
-                timeZone: 'America/Lima',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-        }
-
-        // Función para formatear fecha en horario peruano
-        function formatPeruvianDate(dateString) {
-            const date = new Date(dateString + 'T00:00:00');
-            return date.toLocaleDateString('es-PE', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-            });
-        }
-
-        // Función para abrir WhatsApp
-        function openWhatsApp(phone) {
-            if (!phone || phone.trim() === '') {
-                alert('Este cliente no tiene número de teléfono registrado');
-                return;
-            }
-            
-            // Limpiar el número de teléfono (quitar espacios, guiones, paréntesis)
-            let cleanPhone = phone.replace(/\s+/g, '').replace(/[-()]/g, '');
-            
-            // Si el número no comienza con +51, agregarlo (código de país de Perú)
-            if (!cleanPhone.startsWith('+51') && !cleanPhone.startsWith('51')) {
-                cleanPhone = '+51' + cleanPhone;
-            } else if (cleanPhone.startsWith('51') && !cleanPhone.startsWith('+51')) {
-                cleanPhone = '+' + cleanPhone;
-            }
-            
-            // Crear URL de WhatsApp sin mensaje
-            const whatsappUrl = `https://wa.me/${cleanPhone.replace('+', '')}`;
-            
-            // Abrir WhatsApp
-            window.open(whatsappUrl, '_blank');
-        }
-
-        // Función para hacer llamada telefónica
-        function makeCall(phone) {
-            if (!phone || phone.trim() === '') {
-                alert('Este cliente no tiene número de teléfono registrado');
-                return;
-            }
-            
-            // Limpiar el número de teléfono (quitar espacios, guiones, paréntesis)
-            let cleanPhone = phone.replace(/\s+/g, '').replace(/[-()]/g, '');
-            
-            // Si el número no comienza con +51, agregarlo (código de país de Perú)
-            if (!cleanPhone.startsWith('+51') && !cleanPhone.startsWith('51')) {
-                cleanPhone = '+51' + cleanPhone;
-            } else if (cleanPhone.startsWith('51') && !cleanPhone.startsWith('+51')) {
-                cleanPhone = '+' + cleanPhone;
-            }
-            
-            // Crear URL para llamada
-            const callUrl = `tel:${cleanPhone}`;
-            
-            // Abrir aplicación de llamadas
-            window.location.href = callUrl;
-        }
-
-        // Clientes del Excel con cuotas y plazos
-        const excelClients = [
-            {id: "3524", name: "DE LA PUENTE FLORES, NANCY", phone: "990441351", disbursementDate: "2025-05-30", frequency: "DIARIO", quota: 539.8, term: 60},
-            {id: "7495", name: "GAMARRA ACOSTA, NARCISO", phone: "915203130", disbursementDate: "2025-06-18", frequency: "SEMANAL", quota: 270, term: 4},
-            {id: "7805", name: "RODRIGUEZ SEGURA, GENRI", phone: "937680754", disbursementDate: "2025-06-18", frequency: "SEMANAL", quota: 463.4, term: 6},
-            {id: "19179", name: "BRAVO TRUJILLO, DELIA", phone: "965108551", disbursementDate: "2025-06-17", frequency: "SEMANAL", quota: 540, term: 4},
-            {id: "22074", name: "PALABACINO BRANDAN, JULIANA", phone: "918893603", disbursementDate: "2025-05-30", frequency: "DIARIO", quota: 25.7, term: 30},
-            {id: "22426", name: "ALVARADO VERDE, ARTURO PERCY", phone: "938134663", disbursementDate: "2024-11-29", frequency: "SEMANAL", quota: 6709.4, term: 4},
-            {id: "22926", name: "ADAN ULPIANO, JUAN FILOMON", phone: "990004715", disbursementDate: "2024-12-03", frequency: "MENSUAL", quota: 10500.77, term: 1},
-            {id: "23695", name: "AROSTEGUI MARTINEZ, JOSE FRANCISCO", phone: "940164878", disbursementDate: "2025-05-21", frequency: "SEMANAL", quota: 540, term: 4},
-            {id: "23912", name: "RAMIREZ CHACALTANA, CESAR LUCIANO", phone: "992413952", disbursementDate: "2025-06-30", frequency: "DIARIO", quota: 16, term: 20},
-            {id: "23976", name: "CAMPOS DEZA, DANIEL", phone: "956363967", disbursementDate: "2025-06-13", frequency: "SEMANAL", quota: 2745, term: 6},
-            {id: "24297", name: "HERRERA PRESENTACION, PERCY JONATHAN", phone: "943298683", disbursementDate: "2025-06-20", frequency: "MENSUAL", quota: 582.2, term: 6},
-            {id: "24390", name: "GARIBAY ALVARADO, MIROSLAVA", phone: "943694037", disbursementDate: "2025-06-25", frequency: "SEMANAL", quota: 546.7, term: 5},
-            {id: "24437", name: "NAVARRETE RAMOS, MARIA ELENA", phone: "993619795", disbursementDate: "2025-06-11", frequency: "DIARIO", quota: 85.2, term: 25},
-            {id: "24929", name: "TARAZONA SALVADOR, SAMANTHA KORAIMA", phone: "935220939", disbursementDate: "2025-06-18", frequency: "DIARIO", quota: 36, term: 30},
-            {id: "24983", name: "ORTEGA PONTE, JULIANA KAROLL", phone: "935313986", disbursementDate: "2025-06-13", frequency: "SEMANAL", quota: 270, term: 4},
-            {id: "25030", name: "ROSALES HUAYNATE, YOLY JUDITH", phone: "927618853", disbursementDate: "2025-07-02", frequency: "SEMANAL", quota: 324, term: 4},
-            {id: "25060", name: "CENEPO AROSTEGUI, LOURDES", phone: "935530927", disbursementDate: "2025-05-28", frequency: "DIARIO", quota: 72.1, term: 30},
-            {id: "25086", name: "VERAMENDI VARGAS DE DAVILA, ANGELA LEYDI", phone: "934363562", disbursementDate: "2025-06-30", frequency: "SEMANAL", quota: 1974, term: 4},
-            {id: "25132", name: "MARQUEZ FLORES, JOHAN ANTONNY", phone: "989851759", disbursementDate: "2025-05-30", frequency: "SEMANAL", quota: 4100, term: 8},
-            {id: "25159", name: "PINEDO PUTPAÑA, PATRICIA ALFONSA", phone: "961690993", disbursementDate: "2025-06-16", frequency: "DIARIO", quota: 63.3, term: 20},
-            {id: "25236", name: "UPIACHIHUA PEÑA, RICHARD ALBERTO", phone: "917955821", disbursementDate: "2025-06-13", frequency: "DIARIO", quota: 79.2, term: 20},
-            {id: "25295", name: "ROMERO BERAUN, DORA", phone: "921090751", disbursementDate: "2025-06-20", frequency: "DIARIO", quota: 52.8, term: 20},
-            {id: "25310", name: "RIVERA BRAVO, LIZ MARLENE", phone: "971953669", disbursementDate: "2025-06-20", frequency: "DIARIO", quota: 52.8, term: 20},
-            {id: "25325", name: "RODRIGUEZ SANGAMA, EDWIN", phone: "989956833", disbursementDate: "2025-06-18", frequency: "SEMANAL", quota: 270, term: 4},
-            {id: "18636", name: "HIJAR REATEGUI, JHONEL ROY", phone: "928894109", disbursementDate: "2024-12-03", frequency: "MENSUAL", quota: 8826.38, term: 1},
-            {id: "12640", name: "GRIFO INVERSIONES GARCIA SOCIEDAD COMERCIAL DE RESPONSABILIDAD LIMITADA", phone: "953268928", disbursementDate: "2025-04-16", frequency: "QUINCENAL", quota: 4725, term: 8}
-        ];
-
-        // Inicializar la app
-        function init() {
-            loadData();
-            importExcelClients();
-            setToday();
-            updateDisplay();
-            
-            // Agregar evento para cerrar dropdown al hacer clic fuera
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.form-group')) {
-                    hideClientDropdown();
-                }
-            });
-        }
-
-        // Importar clientes del Excel si no existen
-        function importExcelClients() {
-            // Forzar reimportación para incluir cuotas correctas y plazos
-            localStorage.removeItem('excelClientsImported');
-            localStorage.removeItem('excelClientsImported_v2');
-            localStorage.removeItem('excelClientsImported_v3');
-            localStorage.removeItem('excelClientsImported_v4');
-            localStorage.removeItem('excelClientsImported_v5');
-            
-            const savedImport = localStorage.getItem('excelClientsImported_v6');
-            
-            if (!savedImport) {
-                // Actualizar clientes existentes con cuotas correctas y plazos
-                excelClients.forEach(excelClient => {
-                    const existingClient = clients.find(c => c.id === excelClient.id);
-                    if (existingClient) {
-                        // Actualizar la cuota y el plazo con los valores correctos del Excel
-                        existingClient.quota = excelClient.quota;
-                        existingClient.term = excelClient.term;
-                    } else {
-                        // Si el cliente no existe, agregarlo completo
-                        clients.push({
-                            id: excelClient.id,
-                            name: excelClient.name,
-                            phone: excelClient.phone,
-                            disbursementDate: excelClient.disbursementDate,
-                            frequency: excelClient.frequency,
-                            quota: excelClient.quota,
-                            term: excelClient.term,
-                            createdAt: getPeruvianISOString()
-                        });
-                    }
-                });
-                
-                localStorage.setItem('excelClientsImported_v6', 'true');
-                saveData();
-            }
-        }
-
-        // NUEVA FUNCIÓN: Buscar todos los clientes
-        function searchAllClients() {
-            const searchTerm = document.getElementById('generalClientSearch').value.toLowerCase();
-            const resultsContainer = document.getElementById('searchResults');
-            
-            if (searchTerm === '') {
-                resultsContainer.style.display = 'none';
-                return;
-            }
-            
-            const filteredClients = clients.filter(client => 
-                client.name.toLowerCase().includes(searchTerm) ||
-                client.id.includes(searchTerm) ||
-                (client.phone && client.phone.includes(searchTerm))
-            );
-            
-            resultsContainer.style.display = 'block';
-            
-            if (filteredClients.length === 0) {
-                resultsContainer.innerHTML = '<div class="no-results">No se encontraron clientes</div>';
-            } else {
-                resultsContainer.innerHTML = filteredClients.map(client => `
-                    <div class="search-result-item" onclick="showClientDetailsModal('${client.id}')">
-                        <div style="font-size: 11px; color: #999;">ID: ${client.id}</div>
-                        <div style="font-weight: 600;">${client.name}</div>
-                        ${client.phone ? `<div style="font-size: 13px; color: #666;">${client.phone}</div>` : ''}
-                    </div>
-                `).join('');
-            }
-        }
-
-        // NUEVA FUNCIÓN: Mostrar modal de detalles del cliente (MODIFICADO para incluir botones de editar y eliminar)
-        function showClientDetailsModal(clientId) {
-            const client = clients.find(c => c.id === clientId);
-            if (!client) return;
-            
-            const today = getPeruvianDate();
-            const nextPaymentInfo = getNextPaymentDate(client);
-            const clientPayments = payments.filter(p => p.clientId === clientId);
-            const totalPaid = clientPayments.reduce((sum, p) => sum + p.amount, 0);
-            
-            const content = document.getElementById('clientDetailsContent');
-            content.innerHTML = `
-                <div class="client-detail-info">
-                    <div class="detail-row">
-                        <span class="detail-label">ID:</span>
-                        <span class="detail-value">${client.id}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Nombre:</span>
-                        <span class="detail-value">${client.name}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Teléfono:</span>
-                        <span class="detail-value">${client.phone || 'No registrado'}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Fecha de desembolso:</span>
-                        <span class="detail-value">${client.disbursementDate ? formatPeruvianDate(client.disbursementDate) : 'N/A'}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Frecuencia:</span>
-                        <span class="detail-value">${client.frequency || 'N/A'}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Cuota:</span>
-                        <span class="detail-value" style="color: #1a5490;">S/${client.quota ? client.quota.toFixed(2) : '0.00'}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Plazo:</span>
-                        <span class="detail-value">${client.term || 'N/A'} cuotas</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Próximo pago:</span>
-                        <span class="detail-value">${nextPaymentInfo}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Total pagado:</span>
-                        <span class="detail-value" style="color: #28a745;">S/${totalPaid.toFixed(2)}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Número de pagos:</span>
-                        <span class="detail-value">${clientPayments.length}</span>
-                    </div>
-                </div>
-                
-                <div class="action-buttons">
-                    <button class="btn-action btn-schedule" onclick="showPaymentSchedule('${client.id}')">
-                        📅 Crono
-                    </button>
-                    ${client.phone ? `
-                        <button class="btn-action btn-call" onclick="makeCall('${client.phone}')">
-                            📞 Llamar
-                        </button>
-                        <button class="btn-action btn-whatsapp" onclick="openWhatsApp('${client.phone}')">
-                            📱 WhatsApp
-                        </button>
-                    ` : ''}
-                    <button class="btn-action btn-edit-client" onclick="showEditClientModal('${client.id}'); closeModal('clientDetailsModal');">
-                        ✏️ Modificar
-                    </button>
-                    <button class="btn-action btn-delete-client" onclick="deleteClientFromDetails('${client.id}')">
-                        🗑️ Eliminar
-                    </button>
-                </div>
-            `;
-            
-            showModal('clientDetailsModal');
-        }
-
-        // NUEVA FUNCIÓN: Eliminar cliente desde el modal de detalles
-        function deleteClientFromDetails(clientId) {
-            if (confirm('¿Estás seguro de eliminar este cliente? Se mantendrán los pagos históricos.')) {
-                clients = clients.filter(c => c.id !== clientId);
-                saveData();
-                updateDisplay();
-                closeModal('clientDetailsModal');
-            }
-        }
-
-        // NUEVA FUNCIÓN: Obtener la próxima fecha de pago
-        function getNextPaymentDate(client) {
-            if (!client.disbursementDate) {
-                return 'N/A';
-            }
-            
-            const today = getPeruvianDate();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            
-            // Buscar la próxima fecha de pago
-            for (let i = 0; i < 60; i++) { // Buscar en los próximos 60 días
-                const checkDate = new Date(tomorrow);
-                checkDate.setDate(checkDate.getDate() + i);
-                
-                if (shouldPayOnDate(client, checkDate.toISOString().split('T')[0])) {
-                    return checkDate.toLocaleDateString('es-PE');
-                }
-            }
-            
-            return 'N/A';
-        }
-
-        // Verificar si un cliente debe pagar en una fecha específica
-        function shouldPayOnDate(client, checkDate) {
-            if (!client.disbursementDate) {
-                return false;
-            }
-            
-            const disbursementDate = new Date(client.disbursementDate + 'T00:00:00');
-            const targetDate = new Date(checkDate + 'T00:00:00');
-            
-            // Si la fecha de verificación es anterior o igual al desembolso, no debe pagar
-            if (targetDate <= disbursementDate) {
-                return false;
-            }
-            
-            const daysDiff = Math.floor((targetDate - disbursementDate) / (1000 * 60 * 60 * 24));
-            const dayOfWeek = targetDate.getDay(); // 0 = Domingo, 6 = Sábado
-            
-            switch(client.frequency) {
-                case 'DIARIO':
-                    // Solo de lunes a viernes, empezando desde el día siguiente al desembolso
-                    return dayOfWeek >= 1 && dayOfWeek <= 5 && daysDiff >= 1;
-                    
-                case 'SEMANAL':
-                    // Cada 7 días desde el desembolso, empezando en la primera semana
-                    return daysDiff > 0 && daysDiff % 7 === 0;
-                    
-                case 'QUINCENAL':
-                    // Cada 15 días desde el desembolso, empezando en la primera quincena
-                    return daysDiff > 0 && daysDiff % 15 === 0;
-                    
-                case 'MENSUAL':
-                    // El mismo día de cada mes siguiente
-                    if (daysDiff < 28) return false; // No puede ser el primer mes
-                    
-                    const disbursementDay = disbursementDate.getDate();
-                    const targetDay = targetDate.getDate();
-                    
-                    // Verificar que sea un mes diferente
-                    const monthsDiff = (targetDate.getFullYear() - disbursementDate.getFullYear()) * 12 + 
-                                     (targetDate.getMonth() - disbursementDate.getMonth());
-                    
-                    if (monthsDiff < 1) return false;
-                    
-                    // Si el día del mes coincide
-                    if (disbursementDay === targetDay) {
-                        return true;
-                    }
-                    
-                    // Si es fin de mes y el día de desembolso es mayor que los días del mes actual
-                    const lastDayOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0).getDate();
-                    if (targetDay === lastDayOfMonth && disbursementDay > lastDayOfMonth) {
-                        return true;
-                    }
-                    
-                    return false;
-                    
-                default:
-                    return false;
-            }
-        }
-
-        // Cargar datos del localStorage
-        function loadData() {
-            const savedClients = localStorage.getItem('clients');
-            const savedPayments = localStorage.getItem('payments');
-            
-            if (savedClients) clients = JSON.parse(savedClients);
-            if (savedPayments) payments = JSON.parse(savedPayments);
-        }
-
-        // Guardar datos en localStorage
-        function saveData() {
-            localStorage.setItem('clients', JSON.stringify(clients));
-            localStorage.setItem('payments', JSON.stringify(payments));
-        }
-
-        // Establecer fecha de hoy en horario peruano
-        function setToday() {
-            const today = getPeruvianDateString();
-            document.getElementById('dateFilter').value = today;
-            updateDisplay();
-        }
-
-        // Actualizar la visualización
-        function updateDisplay() {
-            const selectedDate = document.getElementById('dateFilter').value;
-            updateStats(selectedDate);
-            updateClientsList(selectedDate);
-            updatePaymentsList(selectedDate);
-        }
-
-        // Actualizar estadísticas
-        function updateStats(date) {
-            const dayPayments = payments.filter(p => p.date === date);
-            const total = dayPayments.reduce((sum, p) => sum + p.amount, 0);
-            const uniqueClients = new Set(dayPayments.map(p => p.clientId)).size;
-            
-            // Calcular totales por método de pago
-            const cashTotal = dayPayments
-                .filter(p => p.method === 'efectivo')
-                .reduce((sum, p) => sum + p.amount, 0);
-            
-            const yapeTotal = dayPayments
-                .filter(p => p.method === 'yape')
-                .reduce((sum, p) => sum + p.amount, 0);
-
-            document.getElementById('totalPaid').textContent = `S/${total.toFixed(2)}`;
-            document.getElementById('clientsPaid').textContent = uniqueClients;
-            document.getElementById('totalCash').textContent = `S/${cashTotal.toFixed(2)}`;
-            document.getElementById('totalYape').textContent = `S/${yapeTotal.toFixed(2)}`;
-        }
-
-        // Actualizar lista de clientes (MODIFICADO para remover botones)
-        function updateClientsList(date) {
-            const clientsList = document.getElementById('clientsList');
-            const dayPayments = payments.filter(p => p.date === date);
-            
-            // Filtrar clientes que deben pagar en la fecha seleccionada
-            const clientsToPayToday = clients.filter(client => shouldPayOnDate(client, date));
-            
-            if (clientsToPayToday.length === 0) {
-                clientsList.innerHTML = '<div class="empty-state">No hay clientes que deban pagar hoy</div>';
-                return;
-            }
-
-            clientsList.innerHTML = clientsToPayToday.map(client => {
-                const clientPayments = dayPayments.filter(p => p.clientId === client.id);
-                const hasPaid = clientPayments.length > 0;
-                const totalPaid = clientPayments.reduce((sum, p) => sum + p.amount, 0);
-
-                const freqClass = {
-                    'DIARIO': 'freq-diario',
-                    'SEMANAL': 'freq-semanal',
-                    'QUINCENAL': 'freq-quincenal',
-                    'MENSUAL': 'freq-mensual'
-                }[client.frequency];
-
-                return `
-                    <div class="client-item" onclick="showClientDetailsModal('${client.id}')">
-                        <div style="flex: 1;">
-                            <div style="font-weight: 600; font-size: 16px; color: #333; margin-bottom: 8px;">
-                                ${client.name}
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 5px;">
-                                <span class="client-status ${hasPaid ? 'status-paid' : 'status-pending'}">
-                                    ${hasPaid ? 'Pagó' : 'Pendiente'}
-                                </span>
-                                <span class="frequency-badge ${freqClass}" style="text-transform: uppercase; font-size: 11px;">
-                                    ${client.frequency}
-                                </span>
-                                ${client.quota ? `<span class="client-quota" style="font-size: 14px;">S/${client.quota.toFixed(2)}</span>` : ''}
-                            </div>
-                            ${hasPaid ? `<div style="font-size: 12px; color: #666;">Pagó: S/${totalPaid.toFixed(2)}</div>` : ''}
-                        </div>
-                        <button class="btn-circle btn-pay" onclick="quickPayment('${client.id}'); event.stopPropagation();" title="Pago rápido">
-                            💰
-                        </button>
-                    </div>
-                `;
-            }).join('');
-        
-        }
-
-        // Actualizar lista de pagos (MODIFICADO para incluir ID)
-        function updatePaymentsList(date) {
-            const paymentsList = document.getElementById('paymentsList');
-            const dayPayments = payments.filter(p => p.date === date);
-            
-            if (dayPayments.length === 0) {
-                paymentsList.innerHTML = '<div class="empty-state">No hay pagos registrados</div>';
-                return;
-            }
-
-            paymentsList.innerHTML = dayPayments
-                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                .map(payment => {
-                    const client = clients.find(c => c.id === payment.clientId);
-                    const methodIcon = payment.method === 'yape' ? '📱' : '💵';
-                    const methodClass = payment.method === 'yape' ? 'method-yape' : 'method-efectivo';
-                    const methodText = payment.method === 'yape' ? 'Yape' : 'Efectivo';
-                    
-                    return `
-                        <div class="payment-item">
-                            <div class="payment-id">ID: ${client ? client.id : 'N/A'}</div>
-                            <div class="payment-client">
-                                ${client ? client.name : 'Cliente eliminado'}
-                                <span class="payment-method ${methodClass}">${methodIcon} ${methodText}</span>
-                            </div>
-                            <div class="payment-details">
-                                <span>${payment.note || 'Sin nota'}</span>
-                                <span class="payment-amount">S/${payment.amount.toFixed(2)}</span>
-                            </div>
-                            <div class="payment-details">
-                                <span>${formatPeruvianTime(payment.timestamp)}</span>
-                                <button class="btn-danger" onclick="deletePayment('${payment.id}')">Eliminar</button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-        }
-
-        // Mostrar dropdown de clientes
-        function showClientDropdown() {
-            const dropdown = document.getElementById('clientDropdown');
-            dropdown.style.display = 'block';
-            filterModalClients();
-        }
-
-        // Ocultar dropdown de clientes
-        function hideClientDropdown() {
-            const dropdown = document.getElementById('clientDropdown');
-            dropdown.style.display = 'none';
-        }
-
-        // Filtrar clientes en el modal
-        function filterModalClients() {
-            const searchTerm = document.getElementById('clientSearchModal').value.toLowerCase();
-            const dropdown = document.getElementById('clientDropdown');
-            
-            const filteredClients = clients.filter(client => 
-                client.name.toLowerCase().includes(searchTerm) ||
-                (client.phone && client.phone.includes(searchTerm))
-            );
-
-            if (filteredClients.length === 0) {
-                dropdown.innerHTML = '<div class="no-results">No se encontraron clientes</div>';
-            } else {
-                dropdown.innerHTML = filteredClients.map(client => `
-                    <div class="dropdown-item" onclick="selectClient('${client.id}', '${client.name}', ${client.quota || 0})">
-                        <div class="dropdown-item-name">${client.name}</div>
-                        ${client.phone ? `<div class="dropdown-item-phone">${client.phone}</div>` : ''}
-                    </div>
-                `).join('');
-            }
-        }
-
-        // Seleccionar cliente del dropdown (MODIFICADO para auto-completar cuota)
-        function selectClient(clientId, clientName, quota) {
-            document.getElementById('selectedClientId').value = clientId;
-            document.getElementById('clientSearchModal').value = clientName;
-            hideClientDropdown();
-            
-            // Auto-completar el monto con la cuota del cliente
-            if (quota && quota > 0) {
-                document.getElementById('paymentAmount').value = quota;
-            }
-        }
-
-        // Mostrar modal con animación mejorada
-        function showModal(modalId) {
-            const modal = document.getElementById(modalId);
-            modal.style.display = 'block';
-            
-            // Prevenir scroll del body en iOS
-            document.body.style.overflow = 'hidden';
-            document.body.style.position = 'fixed';
-            document.body.style.width = '100%';
-            
-            // Pequeño delay para asegurar que las transiciones funcionen
-            requestAnimationFrame(() => {
-                modal.classList.add('show');
-            });
-        }
-
-        // Cerrar modal con animación mejorada
-        function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            const modalContent = modal.querySelector('.modal-content');
-            
-            // Agregar clase de cierre para animación
-            modalContent.classList.add('closing');
-            modal.classList.remove('show');
-            
-            // Esperar a que termine la animación antes de ocultar
-            setTimeout(() => {
-                modal.style.display = 'none';
-                modalContent.classList.remove('closing');
-            }, 300);
-            
-            // Restaurar scroll del body
-            document.body.style.overflow = '';
-            document.body.style.position = '';
-            document.body.style.width = '';
-            
-            // Limpiar campos del modal de pago
-            if (modalId === 'addPaymentModal') {
-                document.getElementById('clientSearchModal').value = '';
-                document.getElementById('selectedClientId').value = '';
-                hideClientDropdown();
-            }
-        }
-
-        // Mostrar modal de agregar cliente
-        function showAddClientModal() {
-            document.getElementById('clientName').value = '';
-            document.getElementById('clientPhone').value = '';
-            document.getElementById('clientDisbursementDate').value = '';
-            document.getElementById('clientFrequency').value = '';
-            document.getElementById('clientQuota').value = '';
-            document.getElementById('clientTerm').value = '';
-            showModal('addClientModal');
-        }
-
-        // Mostrar modal de agregar pago
-        function showAddPaymentModal() {
-            if (clients.length === 0) {
-                alert('Primero debes agregar al menos un cliente');
-                return;
-            }
-            document.getElementById('clientSearchModal').value = '';
-            document.getElementById('selectedClientId').value = '';
-            document.getElementById('paymentAmount').value = '';
-            document.getElementById('paymentMethod').value = '';
-            document.getElementById('paymentNote').value = '';
-            showModal('addPaymentModal');
-        }
-
-        // Agregar cliente (MODIFICADO para incluir cuota y plazo)
-        function addClient(event) {
-            event.preventDefault();
-            
-            const name = document.getElementById('clientName').value.trim();
-            const phone = document.getElementById('clientPhone').value.trim();
-            const disbursementDate = document.getElementById('clientDisbursementDate').value;
-            const frequency = document.getElementById('clientFrequency').value;
-            const quota = parseFloat(document.getElementById('clientQuota').value);
-            const term = parseInt(document.getElementById('clientTerm').value);
-            
-            const newClient = {
-                id: Date.now().toString(),
-                name: name,
-                phone: phone,
-                disbursementDate: disbursementDate,
-                frequency: frequency,
-                quota: quota,
-                term: term,
-                createdAt: getPeruvianISOString()
-            };
-            
-            clients.push(newClient);
-            saveData();
-            updateDisplay();
-            closeModal('addClientModal');
-        }
-
-        // Agregar pago
-        function addPayment(event) {
-            event.preventDefault();
-            
-            const clientId = document.getElementById('selectedClientId').value;
-            const amount = parseFloat(document.getElementById('paymentAmount').value);
-            const method = document.getElementById('paymentMethod').value;
-            const note = document.getElementById('paymentNote').value.trim();
-            const date = document.getElementById('dateFilter').value;
-            
-            if (!clientId) {
-                alert('Por favor selecciona un cliente de la lista');
-                return;
-            }
-            
-            const newPayment = {
-                id: Date.now().toString(),
-                clientId: clientId,
-                amount: amount,
-                method: method,
-                note: note,
-                date: date,
-                timestamp: getPeruvianISOString()
-            };
-            
-            payments.push(newPayment);
-            saveData();
-            updateDisplay();
-            closeModal('addPaymentModal');
-        }
-
-        // Eliminar cliente
-        function deleteClient(clientId, event) {
-            event.stopPropagation();
-            if (confirm('¿Estás seguro de eliminar este cliente? Se mantendrán los pagos históricos.')) {
-                clients = clients.filter(c => c.id !== clientId);
-                saveData();
-                updateDisplay();
-            }
-        }
-
-        // Eliminar pago
-        function deletePayment(paymentId) {
-            if (confirm('¿Estás seguro de eliminar este pago?')) {
-                payments = payments.filter(p => p.id !== paymentId);
-                saveData();
-                updateDisplay();
-            }
-        }
-
-        // Event listener para cambio de fecha
-        document.getElementById('dateFilter').addEventListener('change', updateDisplay);
-
-        // Cerrar modales al hacer clic fuera
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                const modalId = event.target.id;
-                closeModal(modalId);
-            }
-        }
-
-        // Prevenir zoom en iOS cuando se hace focus en inputs
-        document.addEventListener('touchstart', function(e) {
-            if (e.touches.length > 1) {
-                e.preventDefault();
-            }
-        });
-
-        // NUEVA FUNCIÓN: Mostrar cronograma de pagos
-        function showPaymentSchedule(clientId) {
-            const client = clients.find(c => c.id === clientId);
-            if (!client || !client.disbursementDate || !client.term) {
-                alert('No se puede generar el cronograma. Faltan datos del cliente.');
-                return;
-            }
-            
-            const clientPayments = payments.filter(p => p.clientId === clientId);
-            
-            // Generar todas las fechas de pago
-            const paymentDates = [];
-            const startDate = new Date(client.disbursementDate + 'T00:00:00');
-            let currentDate = new Date(startDate);
-            let paymentCount = 0;
-            
-            while (paymentCount < client.term) {
-                if (shouldPayOnDate(client, currentDate.toISOString().split('T')[0])) {
-                    paymentDates.push(new Date(currentDate));
-                    paymentCount++;
-                }
-                currentDate.setDate(currentDate.getDate() + 1);
-                
-                // Evitar bucle infinito
-                if (currentDate > new Date(startDate.getTime() + (365 * 24 * 60 * 60 * 1000))) {
-                    break;
-                }
-            }
-            
-            // Generar contenido del cronograma
-            let scheduleHTML = `
-                <div style="margin-bottom: 20px;">
-                    <h4 style="margin: 0;">Cliente: ${client.name}</h4>
-                    <p style="margin: 5px 0; color: #666;">ID: ${client.id}</p>
-                </div>
-                <table class="schedule-table">
-                    <thead>
-                        <tr>
-                            <th>N°</th>
-                            <th>Fecha</th>
-                            <th>Monto</th>
-                            <th>Estado</th>
-                            <th>Pagado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            
-            const today = getPeruvianDateString();
-            let totalPagado = 0;
-            
-            paymentDates.forEach((date, index) => {
-                const dateStr = date.toISOString().split('T')[0];
-                const formattedDate = formatPeruvianDate(dateStr);
-                
-                // Buscar pagos en esa fecha
-                const paymentsOnDate = clientPayments.filter(p => p.date === dateStr);
-                const amountPaid = paymentsOnDate.reduce((sum, p) => sum + p.amount, 0);
-                totalPagado += amountPaid;
-                
-                let status = '';
-                let statusClass = '';
-                
-                if (paymentsOnDate.length > 0) {
-                    status = 'Pagado';
-                    statusClass = 'paid';
-                } else if (dateStr < today) {
-                    status = 'Vencido';
-                    statusClass = 'pending';
-                } else if (dateStr === today) {
-                    status = 'Hoy';
-                    statusClass = 'pending';
-                } else {
-                    status = 'Pendiente';
-                    statusClass = 'future';
-                }
-                
-                scheduleHTML += `
-                    <tr class="${statusClass}">
-                        <td>${index + 1}</td>
-                        <td>${formattedDate}</td>
-                        <td>S/${client.quota.toFixed(2)}</td>
-                        <td>${status}</td>
-                        <td>${amountPaid > 0 ? `S/${amountPaid.toFixed(2)}` : '-'}</td>
-                    </tr>
-                `;
-            });
-            
-            const totalEsperado = client.quota * client.term;
-            const saldoPendiente = totalEsperado - totalPagado;
-            
-            scheduleHTML += `
-                    </tbody>
-                </table>
-                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <strong>Total esperado:</strong>
-                        <span>S/${totalEsperado.toFixed(2)}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <strong>Total pagado:</strong>
-                        <span style="color: #28a745;">S/${totalPagado.toFixed(2)}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <strong>Saldo pendiente:</strong>
-                        <span style="color: #dc3545;">S/${saldoPendiente.toFixed(2)}</span>
-                    </div>
-                </div>
-            `;
-            
-            // Mostrar en el modal de cronograma
-            document.getElementById('scheduleModalContent').innerHTML = scheduleHTML;
-            showModal('scheduleModal');
-        }
-
-        // Función para actualizar cuotas de clientes existentes
-        function updateQuotas() {
-            let updated = 0;
-            excelClients.forEach(excelClient => {
-                const existingClient = clients.find(c => c.id === excelClient.id);
-                if (existingClient && (!existingClient.quota || existingClient.quota === 0)) {
-                    existingClient.quota = excelClient.quota;
-                    updated++;
-                }
-            });
-            
-            if (updated > 0) {
-                saveData();
-                updateDisplay();
-                alert(`Se actualizaron las cuotas de ${updated} clientes`);
-            } else {
-                alert('Todos los clientes ya tienen sus cuotas actualizadas');
-            }
-        }
-
-        // NUEVA FUNCIÓN: Mostrar modal de editar cliente
-        function showEditClientModal(clientId) {
-            const client = clients.find(c => c.id === clientId);
-            if (!client) return;
-            
-            document.getElementById('editClientId').value = client.id;
-            document.getElementById('editClientName').value = client.name;
-            document.getElementById('editClientPhone').value = client.phone || '';
-            document.getElementById('editClientDisbursementDate').value = client.disbursementDate || '';
-            document.getElementById('editClientFrequency').value = client.frequency || '';
-            document.getElementById('editClientQuota').value = client.quota || '';
-            document.getElementById('editClientTerm').value = client.term || '';
-            
-            showModal('editClientModal');
-        }
-
-        // NUEVA FUNCIÓN: Actualizar cliente
-        function updateClient(event) {
-            event.preventDefault();
-            
-            const clientId = document.getElementById('editClientId').value;
-            const client = clients.find(c => c.id === clientId);
-            
-            if (!client) return;
-            
-            client.name = document.getElementById('editClientName').value.trim();
-            client.phone = document.getElementById('editClientPhone').value.trim();
-            client.disbursementDate = document.getElementById('editClientDisbursementDate').value;
-            client.frequency = document.getElementById('editClientFrequency').value;
-            client.quota = parseFloat(document.getElementById('editClientQuota').value);
-            client.term = parseInt(document.getElementById('editClientTerm').value);
-            
-            saveData();
-            updateDisplay();
-            closeModal('editClientModal');
-            alert('Cliente actualizado exitosamente');
-        }
-
-        // NUEVA FUNCIÓN: Pago rápido
-        function quickPayment(clientId) {
-            const client = clients.find(c => c.id === clientId);
-            if (!client) return;
-            
-            const date = document.getElementById('dateFilter').value;
-            
-            // Configurar el modal de pago con los datos del cliente
-            document.getElementById('clientSearchModal').value = client.name;
-            document.getElementById('selectedClientId').value = client.id;
-            document.getElementById('paymentAmount').value = client.quota || '';
-            document.getElementById('paymentMethod').value = 'efectivo'; // Por defecto efectivo
-            document.getElementById('paymentNote').value = 'Pago rápido';
-            
-            showModal('addPaymentModal');
-        }
-
-        // Inicializar la aplicación
-        init();
-    </script>
+<div class="header"><h1>Control de Pagos</h1></div>
+<div class="container">
+<div class="date-filter">
+<div><label for="dateFilter" class="form-label">Fecha:</label><input type="date" id="dateFilter" class="form-input" style="width:auto;"></div>
+<button class="btn-secondary" onclick="setToday()">Hoy</button>
+</div>
+<div class="stats-card">
+<h2 class="section-title">Resumen del Día</h2>
+<div class="stats-grid">
+<div class="stat-item"><div class="stat-value" id="totalPaid">S/0</div><div class="stat-label">Total Recibido</div></div>
+<div class="stat-item"><div class="stat-value" id="clientsPaid">0</div><div class="stat-label">Clientes que Pagaron</div></div>
+<div class="stat-item"><div class="stat-value" id="totalCash">S/0</div><div class="stat-label">💵 Efectivo</div></div>
+<div class="stat-item"><div class="stat-value" id="totalYape">S/0</div><div class="stat-label">📱 Yape</div></div>
+</div>
+</div>
+<div class="general-search-container">
+<h2 class="section-title">Buscar Cliente</h2>
+<div class="search-container"><input type="text" class="form-input search-input" id="generalClientSearch" placeholder="🔍 Buscar por nombre, ID o teléfono..." onkeyup="searchAllClients()"></div>
+<div id="searchResults" class="search-results" style="display:none;"></div>
+</div>
+<button class="btn-primary" onclick="showAddClientModal()">➕ Agregar Cliente</button>
+<button class="btn-primary" onclick="showAddPaymentModal()">💰 Registrar Pago</button>
+<div class="client-list">
+<h2 class="section-title">Clientes del Día</h2>
+<div class="clients-container" id="clientsContainer"><div id="clientsList"><div class="empty-state">No hay clientes registrados</div></div></div>
+</div>
+<div class="payment-history">
+<h2 class="section-title">Pagos del Día</h2>
+<div class="payments-container" id="paymentsContainer"><div id="paymentsList"><div class="empty-state">No hay pagos registrados</div></div></div>
+</div>
+</div>
+<div id="addClientModal" class="modal">
+<div class="modal-content">
+<div class="modal-header"><h3 class="modal-title">Agregar Cliente</h3><button class="close-btn" onclick="closeModal('addClientModal')">&times;</button></div>
+<form onsubmit="addClient(event)">
+<div class="form-group"><label class="form-label">Nombre del Cliente</label><input type="text" class="form-input" id="clientName" required></div>
+<div class="form-group"><label class="form-label">Teléfono (opcional)</label><input type="tel" class="form-input" id="clientPhone"></div>
+<div class="form-group"><label class="form-label">Fecha de Desembolso</label><input type="date" class="form-input" id="clientDisbursementDate" required></div>
+<div class="form-group"><label class="form-label">Frecuencia de Pago</label><select class="form-input" id="clientFrequency" required><option value="">Seleccionar frecuencia...</option><option value="DIARIO">Diario</option><option value="SEMANAL">Semanal</option><option value="QUINCENAL">Quincenal</option><option value="MENSUAL">Mensual</option></select></div>
+<div class="form-group"><label class="form-label">Monto de Cuota</label><input type="number" class="form-input" id="clientQuota" step="0.01" required></div>
+<div class="form-group"><label class="form-label">Plazo (número de cuotas)</label><input type="number" class="form-input" id="clientTerm" min="1" required></div>
+<button type="submit" class="btn-primary">Agregar Cliente</button>
+</form>
+</div>
+</div>
+<div id="editClientModal" class="modal">
+<div class="modal-content">
+<div class="modal-header"><h3 class="modal-title">Modificar Cliente</h3><button class="close-btn" onclick="closeModal('editClientModal')">&times;</button></div>
+<form onsubmit="updateClient(event)">
+<input type="hidden" id="editClientId">
+<div class="form-group"><label class="form-label">Nombre del Cliente</label><input type="text" class="form-input" id="editClientName" required></div>
+<div class="form-group"><label class="form-label">Teléfono (opcional)</label><input type="tel" class="form-input" id="editClientPhone"></div>
+<div class="form-group"><label class="form-label">Fecha de Desembolso</label><input type="date" class="form-input" id="editClientDisbursementDate" required></div>
+<div class="form-group"><label class="form-label">Frecuencia de Pago</label><select class="form-input" id="editClientFrequency" required><option value="">Seleccionar frecuencia...</option><option value="DIARIO">Diario</option><option value="SEMANAL">Semanal</option><option value="QUINCENAL">Quincenal</option><option value="MENSUAL">Mensual</option></select></div>
+<div class="form-group"><label class="form-label">Monto de Cuota</label><input type="number" class="form-input" id="editClientQuota" step="0.01" required></div>
+<div class="form-group"><label class="form-label">Plazo (número de cuotas)</label><input type="number" class="form-input" id="editClientTerm" min="1" required></div>
+<button type="submit" class="btn-primary">Guardar Cambios</button>
+</form>
+</div>
+</div>
+<div id="addPaymentModal" class="modal">
+<div class="modal-content">
+<div class="modal-header"><h3 class="modal-title">Registrar Pago</h3><button class="close-btn" onclick="closeModal('addPaymentModal')">&times;</button></div>
+<form onsubmit="addPayment(event)">
+<div class="form-group"><label class="form-label">Cliente</label><input type="text" class="form-input" id="clientSearchModal" placeholder="🔍 Buscar y seleccionar cliente..." autocomplete="off" onkeyup="filterModalClients()" onfocus="showClientDropdown()" required><input type="hidden" id="selectedClientId" required><div id="clientDropdown" class="client-dropdown" style="display:none;"></div></div>
+<div class="form-group"><label class="form-label">Monto</label><input type="number" class="form-input" id="paymentAmount" step="0.01" required></div>
+<div class="form-group"><label class="form-label">Método de Pago</label><select class="form-input" id="paymentMethod" required><option value="">Seleccionar método...</option><option value="efectivo">💵 Efectivo</option><option value="yape">📱 Yape</option></select></div>
+<div class="form-group"><label class="form-label">Nota (opcional)</label><input type="text" class="form-input" id="paymentNote"></div>
+<button type="submit" class="btn-primary">Registrar Pago</button>
+</form>
+</div>
+</div>
+<div id="clientDetailsModal" class="modal">
+<div class="modal-content">
+<div class="modal-header"><h3 class="modal-title">Detalles del Cliente</h3><button class="close-btn" onclick="closeModal('clientDetailsModal')">&times;</button></div>
+<div id="clientDetailsContent"></div>
+</div>
+</div>
+<div id="scheduleModal" class="modal">
+<div class="modal-content" style="max-width:800px;">
+<div class="modal-header"><h3 class="modal-title">Cronograma de Pagos</h3><button class="close-btn" onclick="closeModal('scheduleModal')">&times;</button></div>
+<div id="scheduleModalContent"></div>
+</div>
+</div>
+<script>
+let clients=[];let payments=[];
+function getPeruvianDate(date=new Date()){const peruTime=new Date(date.toLocaleString("en-US",{timeZone:"America/Lima"}));return peruTime;}
+function getPeruvianDateString(date=new Date()){const options={timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'};const peruDateStr=date.toLocaleDateString('en-CA',options);return peruDateStr;}
+function getPeruvianISOString(date=new Date()){return new Date(date.toLocaleString("en-US",{timeZone:"America/Lima"})).toISOString();}
+function formatPeruvianTime(dateString){const date=new Date(dateString);return date.toLocaleTimeString('es-PE',{timeZone:'America/Lima',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+function formatPeruvianDate(dateString){const date=new Date(dateString+'T00:00:00');return date.toLocaleDateString('es-PE',{year:'numeric',month:'2-digit',day:'2-digit'});}
+function openWhatsApp(phone){if(!phone||phone.trim()===''){alert('Este cliente no tiene número de teléfono registrado');return;}let cleanPhone=phone.replace(/\s+/g,'').replace(/[-()]/g,'');if(!cleanPhone.startsWith('+51')&&!cleanPhone.startsWith('51')){cleanPhone='+51'+cleanPhone;}else if(cleanPhone.startsWith('51')&&!cleanPhone.startsWith('+51')){cleanPhone='+'+cleanPhone;}const whatsappUrl=`https://wa.me/${cleanPhone.replace('+','')}`;window.open(whatsappUrl,'_blank');}
+function makeCall(phone){if(!phone||phone.trim()===''){alert('Este cliente no tiene número de teléfono registrado');return;}let cleanPhone=phone.replace(/\s+/g,'').replace(/[-()]/g,'');if(!cleanPhone.startsWith('+51')&&!cleanPhone.startsWith('51')){cleanPhone='+51'+cleanPhone;}else if(cleanPhone.startsWith('51')&&!cleanPhone.startsWith('+51')){cleanPhone='+'+cleanPhone;}const callUrl=`tel:${cleanPhone}`;window.location.href=callUrl;}
+const excelClients=[{id:"3524",name:"DE LA PUENTE FLORES, NANCY",phone:"990441351",disbursementDate:"2025-05-30",frequency:"DIARIO",quota:539.8,term:60},{id:"7495",name:"GAMARRA ACOSTA, NARCISO",phone:"915203130",disbursementDate:"2025-06-18",frequency:"SEMANAL",quota:270,term:4},{id:"7805",name:"RODRIGUEZ SEGURA, GENRI",phone:"937680754",disbursementDate:"2025-06-18",frequency:"SEMANAL",quota:463.4,term:6},{id:"19179",name:"BRAVO TRUJILLO, DELIA",phone:"965108551",disbursementDate:"2025-06-17",frequency:"SEMANAL",quota:540,term:4},{id:"22074",name:"PALABACINO BRANDAN, JULIANA",phone:"918893603",disbursementDate:"2025-05-30",frequency:"DIARIO",quota:25.7,term:30},{id:"22426",name:"ALVARADO VERDE, ARTURO PERCY",phone:"938134663",disbursementDate:"2024-11-29",frequency:"SEMANAL",quota:6709.4,term:4},{id:"22926",name:"ADAN ULPIANO, JUAN FILOMON",phone:"990004715",disbursementDate:"2024-12-03",frequency:"MENSUAL",quota:10500.77,term:1},{id:"23695",name:"AROSTEGUI MARTINEZ, JOSE FRANCISCO",phone:"940164878",disbursementDate:"2025-05-21",frequency:"SEMANAL",quota:540,term:4},{id:"23912",name:"RAMIREZ CHACALTANA, CESAR LUCIANO",phone:"992413952",disbursementDate:"2025-06-30",frequency:"DIARIO",quota:16,term:20},{id:"23976",name:"CAMPOS DEZA, DANIEL",phone:"956363967",disbursementDate:"2025-06-13",frequency:"SEMANAL",quota:2745,term:6},{id:"24297",name:"HERRERA PRESENTACION, PERCY JONATHAN",phone:"943298683",disbursementDate:"2025-06-20",frequency:"MENSUAL",quota:582.2,term:6},{id:"24390",name:"GARIBAY ALVARADO, MIROSLAVA",phone:"943694037",disbursementDate:"2025-06-25",frequency:"SEMANAL",quota:546.7,term:5},{id:"24437",name:"NAVARRETE RAMOS, MARIA ELENA",phone:"993619795",disbursementDate:"2025-06-11",frequency:"DIARIO",quota:85.2,term:25},{id:"24929",name:"TARAZONA SALVADOR, SAMANTHA KORAIMA",phone:"935220939",disbursementDate:"2025-06-18",frequency:"DIARIO",quota:36,term:30},{id:"24983",name:"ORTEGA PONTE, JULIANA KAROLL",phone:"935313986",disbursementDate:"2025-06-13",frequency:"SEMANAL",quota:270,term:4},{id:"25030",name:"ROSALES HUAYNATE, YOLY JUDITH",phone:"927618853",disbursementDate:"2025-07-02",frequency:"SEMANAL",quota:324,term:4},{id:"25060",name:"CENEPO AROSTEGUI, LOURDES",phone:"935530927",disbursementDate:"2025-05-28",frequency:"DIARIO",quota:72.1,term:30},{id:"25086",name:"VERAMENDI VARGAS DE DAVILA, ANGELA LEYDI",phone:"934363562",disbursementDate:"2025-06-30",frequency:"SEMANAL",quota:1974,term:4},{id:"25132",name:"MARQUEZ FLORES, JOHAN ANTONNY",phone:"989851759",disbursementDate:"2025-05-30",frequency:"SEMANAL",quota:4100,term:8},{id:"25159",name:"PINEDO PUTPAÑA, PATRICIA ALFONSA",phone:"961690993",disbursementDate:"2025-06-16",frequency:"DIARIO",quota:63.3,term:20},{id:"25236",name:"UPIACHIHUA PEÑA, RICHARD ALBERTO",phone:"917955821",disbursementDate:"2025-06-13",frequency:"DIARIO",quota:79.2,term:20},{id:"25295",name:"ROMERO BERAUN, DORA",phone:"921090751",disbursementDate:"2025-06-20",frequency:"DIARIO",quota:52.8,term:20},{id:"25310",name:"RIVERA BRAVO, LIZ MARLENE",phone:"971953669",disbursementDate:"2025-06-20",frequency:"DIARIO",quota:52.8,term:20},{id:"25325",name:"RODRIGUEZ SANGAMA, EDWIN",phone:"989956833",disbursementDate:"2025-06-18",frequency:"SEMANAL",quota:270,term:4},{id:"18636",name:"HIJAR REATEGUI, JHONEL ROY",phone:"928894109",disbursementDate:"2024-12-03",frequency:"MENSUAL",quota:8826.38,term:1},{id:"12640",name:"GRIFO INVERSIONES GARCIA SOCIEDAD COMERCIAL DE RESPONSABILIDAD LIMITADA",phone:"953268928",disbursementDate:"2025-04-16",frequency:"QUINCENAL",quota:4725,term:8}];
+function init(){loadData();importExcelClients();setToday();updateDisplay();document.addEventListener('click',function(e){if(!e.target.closest('.form-group')){hideClientDropdown();}});}
+function importExcelClients(){localStorage.removeItem('excelClientsImported');localStorage.removeItem('excelClientsImported_v2');localStorage.removeItem('excelClientsImported_v3');localStorage.removeItem('excelClientsImported_v4');localStorage.removeItem('excelClientsImported_v5');const savedImport=localStorage.getItem('excelClientsImported_v6');if(!savedImport){excelClients.forEach(excelClient=>{const existingClient=clients.find(c=>c.id===excelClient.id);if(existingClient){existingClient.quota=excelClient.quota;existingClient.term=excelClient.term;}else{clients.push({id:excelClient.id,name:excelClient.name,phone:excelClient.phone,disbursementDate:excelClient.disbursementDate,frequency:excelClient.frequency,quota:excelClient.quota,term:excelClient.term,createdAt:getPeruvianISOString()});}});localStorage.setItem('excelClientsImported_v6','true');saveData();}}
+function searchAllClients(){const searchTerm=document.getElementById('generalClientSearch').value.toLowerCase();const resultsContainer=document.getElementById('searchResults');if(searchTerm===''){resultsContainer.style.display='none';return;}const filteredClients=clients.filter(client=>client.name.toLowerCase().includes(searchTerm)||client.id.includes(searchTerm)||(client.phone&&client.phone.includes(searchTerm)));resultsContainer.style.display='block';if(filteredClients.length===0){resultsContainer.innerHTML='<div class="no-results">No se encontraron clientes</div>';}else{resultsContainer.innerHTML=filteredClients.map(client=>`<div class="search-result-item" onclick="showClientDetailsModal('${client.id}')"><div style="font-size:11px;color:#999;">ID: ${client.id}</div><div style="font-weight:600;">${client.name}</div>${client.phone?`<div style="font-size:13px;color:#666;">${client.phone}</div>`:''}</div>`).join('');}}
+function showClientDetailsModal(clientId){const client=clients.find(c=>c.id===clientId);if(!client)return;const today=getPeruvianDate();const nextPaymentInfo=getNextPaymentDate(client);const clientPayments=payments.filter(p=>p.clientId===clientId);const totalPaid=clientPayments.reduce((sum,p)=>sum+p.amount,0);const content=document.getElementById('clientDetailsContent');content.innerHTML=`<div class="client-detail-info"><div class="detail-row"><span class="detail-label">ID:</span><span class="detail-value">${client.id}</span></div><div class="detail-row"><span class="detail-label">Nombre:</span><span class="detail-value">${client.name}</span></div><div class="detail-row"><span class="detail-label">Teléfono:</span><span class="detail-value">${client.phone||'No registrado'}</span></div><div class="detail-row"><span class="detail-label">Fecha de desembolso:</span><span class="detail-value">${client.disbursementDate?formatPeruvianDate(client.disbursementDate):'N/A'}</span></div><div class="detail-row"><span class="detail-label">Frecuencia:</span><span class="detail-value">${client.frequency||'N/A'}</span></div><div class="detail-row"><span class="detail-label">Cuota:</span><span class="detail-value" style="color:#1a5490;">S/${client.quota?client.quota.toFixed(2):'0.00'}</span></div><div class="detail-row"><span class="detail-label">Plazo:</span><span class="detail-value">${client.term||'N/A'} cuotas</span></div><div class="detail-row"><span class="detail-label">Próximo pago:</span><span class="detail-value">${nextPaymentInfo}</span></div><div class="detail-row"><span class="detail-label">Total pagado:</span><span class="detail-value" style="color:#28a745;">S/${totalPaid.toFixed(2)}</span></div><div class="detail-row"><span class="detail-label">Número de pagos:</span><span class="detail-value">${clientPayments.length}</span></div></div><div class="action-buttons"><button class="btn-action btn-schedule" onclick="showPaymentSchedule('${client.id}')">📅 Crono</button>${client.phone?`<button class="btn-action btn-call" onclick="makeCall('${client.phone}')">📞 Llamar</button><button class="btn-action btn-whatsapp" onclick="openWhatsApp('${client.phone}')">📱 WhatsApp</button>`:''}<button class="btn-action btn-edit-client" onclick="showEditClientModal('${client.id}');closeModal('clientDetailsModal');">✏️ Modificar</button><button class="btn-action btn-delete-client" onclick="deleteClientFromDetails('${client.id}')">🗑️ Eliminar</button></div>`;showModal('clientDetailsModal');}
+function deleteClientFromDetails(clientId){if(confirm('¿Estás seguro de eliminar este cliente? Se mantendrán los pagos históricos.')){clients=clients.filter(c=>c.id!==clientId);saveData();updateDisplay();closeModal('clientDetailsModal');}}
+function getNextPaymentDate(client){if(!client.disbursementDate){return'N/A';}const today=getPeruvianDate();const tomorrow=new Date(today);tomorrow.setDate(tomorrow.getDate()+1);for(let i=0;i<60;i++){const checkDate=new Date(tomorrow);checkDate.setDate(checkDate.getDate()+i);if(shouldPayOnDate(client,checkDate.toISOString().split('T')[0])){return checkDate.toLocaleDateString('es-PE');}}return'N/A';}
+function shouldPayOnDate(client,checkDate){if(!client.disbursementDate){return false;}const disbursementDate=new Date(client.disbursementDate+'T00:00:00');const targetDate=new Date(checkDate+'T00:00:00');if(targetDate<=disbursementDate){return false;}const daysDiff=Math.floor((targetDate-disbursementDate)/(1000*60*60*24));const dayOfWeek=targetDate.getDay();switch(client.frequency){case'DIARIO':return dayOfWeek>=1&&dayOfWeek<=5&&daysDiff>=1;case'SEMANAL':return daysDiff>0&&daysDiff%7===0;case'QUINCENAL':return daysDiff>0&&daysDiff%15===0;case'MENSUAL':if(daysDiff<28)return false;const disbursementDay=disbursementDate.getDate();const targetDay=targetDate.getDate();const monthsDiff=(targetDate.getFullYear()-disbursementDate.getFullYear())*12+(targetDate.getMonth()-disbursementDate.getMonth());if(monthsDiff<1)return false;if(disbursementDay===targetDay){return true;}const lastDayOfMonth=new Date(targetDate.getFullYear(),targetDate.getMonth()+1,0).getDate();if(targetDay===lastDayOfMonth&&disbursementDay>lastDayOfMonth){return true;}return false;default:return false;}}
+function loadData(){const savedClients=localStorage.getItem('clients');const savedPayments=localStorage.getItem('payments');if(savedClients)clients=JSON.parse(savedClients);if(savedPayments)payments=JSON.parse(savedPayments);}
+function saveData(){localStorage.setItem('clients',JSON.stringify(clients));localStorage.setItem('payments',JSON.stringify(payments));}
+function setToday(){const today=getPeruvianDateString();document.getElementById('dateFilter').value=today;updateDisplay();}
+function updateDisplay(){const selectedDate=document.getElementById('dateFilter').value;updateStats(selectedDate);updateClientsList(selectedDate);updatePaymentsList(selectedDate);}
+function updateStats(date){const dayPayments=payments.filter(p=>p.date===date);const total=dayPayments.reduce((sum,p)=>sum+p.amount,0);const uniqueClients=new Set(dayPayments.map(p=>p.clientId)).size;const cashTotal=dayPayments.filter(p=>p.method==='efectivo').reduce((sum,p)=>sum+p.amount,0);const yapeTotal=dayPayments.filter(p=>p.method==='yape').reduce((sum,p)=>sum+p.amount,0);document.getElementById('totalPaid').textContent=`S/${total.toFixed(2)}`;document.getElementById('clientsPaid').textContent=uniqueClients;document.getElementById('totalCash').textContent=`S/${cashTotal.toFixed(2)}`;document.getElementById('totalYape').textContent=`S/${yapeTotal.toFixed(2)}`;}
+function updateClientsList(date){const clientsList=document.getElementById('clientsList');const dayPayments=payments.filter(p=>p.date===date);const clientsToPayToday=clients.filter(client=>shouldPayOnDate(client,date));if(clientsToPayToday.length===0){clientsList.innerHTML='<div class="empty-state">No hay clientes que deban pagar hoy</div>';return;}clientsList.innerHTML=clientsToPayToday.map(client=>{const clientPayments=dayPayments.filter(p=>p.clientId===client.id);const hasPaid=clientPayments.length>0;const totalPaid=clientPayments.reduce((sum,p)=>sum+p.amount,0);const freqClass={'DIARIO':'freq-diario','SEMANAL':'freq-semanal','QUINCENAL':'freq-quincenal','MENSUAL':'freq-mensual'}[client.frequency];return`<div class="client-item" onclick="showClientDetailsModal('${client.id}')"><div style="flex:1;"><div style="font-weight:600;font-size:16px;color:#333;margin-bottom:8px;">${client.name}</div><div style="display:flex;align-items:center;gap:12px;margin-bottom:5px;"><span class="client-status ${hasPaid?'status-paid':'status-pending'}">${hasPaid?'Pagó':'Pendiente'}</span><span class="frequency-badge ${freqClass}" style="text-transform:uppercase;font-size:11px;">${client.frequency}</span>${client.quota?`<span class="client-quota" style="font-size:14px;">S/${client.quota.toFixed(2)}</span>`:''}</div>${hasPaid?`<div style="font-size:12px;color:#666;">Pagó: S/${totalPaid.toFixed(2)}</div>`:''}</div><button class="btn-circle btn-pay" onclick="quickPayment('${client.id}');event.stopPropagation();" title="Pago rápido">💰</button></div>`;}).join('');}
+function updatePaymentsList(date){const paymentsList=document.getElementById('paymentsList');const dayPayments=payments.filter(p=>p.date===date);if(dayPayments.length===0){paymentsList.innerHTML='<div class="empty-state">No hay pagos registrados</div>';return;}paymentsList.innerHTML=dayPayments.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).map(payment=>{const client=clients.find(c=>c.id===payment.clientId);const methodIcon=payment.method==='yape'?'📱':'💵';const methodClass=payment.method==='yape'?'method-yape':'method-efectivo';const methodText=payment.method==='yape'?'Yape':'Efectivo';return`<div class="payment-item"><div class="payment-id">ID: ${client?client.id:'N/A'}</div><div class="payment-client">${client?client.name:'Cliente eliminado'}<span class="payment-method ${methodClass}">${methodIcon} ${methodText}</span></div><div class="payment-details"><span>${payment.note||'Sin nota'}</span><span class="payment-amount">S/${payment.amount.toFixed(2)}</span></div><div class="payment-details"><span>${formatPeruvianTime(payment.timestamp)}</span><button class="btn-danger" onclick="deletePayment('${payment.id}')">Eliminar</button></div></div>`;}).join('');}
+function showClientDropdown(){const dropdown=document.getElementById('clientDropdown');dropdown.style.display='block';filterModalClients();}
+function hideClientDropdown(){const dropdown=document.getElementById('clientDropdown');dropdown.style.display='none';}
+function filterModalClients(){const searchTerm=document.getElementById('clientSearchModal').value.toLowerCase();const dropdown=document.getElementById('clientDropdown');const filteredClients=clients.filter(client=>client.name.toLowerCase().includes(searchTerm)||(client.phone&&client.phone.includes(searchTerm)));if(filteredClients.length===0){dropdown.innerHTML='<div class="no-results">No se encontraron clientes</div>';}else{dropdown.innerHTML=filteredClients.map(client=>`<div class="dropdown-item" onclick="selectClient('${client.id}','${client.name}',${client.quota||0})"><div class="dropdown-item-name">${client.name}</div>${client.phone?`<div class="dropdown-item-phone">${client.phone}</div>`:''}</div>`).join('');}}
+function selectClient(clientId,clientName,quota){document.getElementById('selectedClientId').value=clientId;document.getElementById('clientSearchModal').value=clientName;hideClientDropdown();if(quota&&quota>0){document.getElementById('paymentAmount').value=quota;}}
+function showModal(modalId){const modal=document.getElementById(modalId);modal.style.display='block';document.body.style.overflow='hidden';document.body.style.position='fixed';document.body.style.width='100%';requestAnimationFrame(()=>{modal.classList.add('show');});}
+function closeModal(modalId){const modal=document.getElementById(modalId);const modalContent=modal.querySelector('.modal-content');modalContent.classList.add('closing');modal.classList.remove('show');setTimeout(()=>{modal.style.display='none';modalContent.classList.remove('closing');},300);document.body.style.overflow='';document.body.style.position='';document.body.style.width='';if(modalId==='addPaymentModal'){document.getElementById('clientSearchModal').value='';document.getElementById('selectedClientId').value='';hideClientDropdown();}}
+function showAddClientModal(){document.getElementById('clientName').value='';document.getElementById('clientPhone').value='';document.getElementById('clientDisbursementDate').value='';document.getElementById('clientFrequency').value='';document.getElementById('clientQuota').value='';document.getElementById('clientTerm').value='';showModal('addClientModal');}
+function showAddPaymentModal(){if(clients.length===0){alert('Primero debes agregar al menos un cliente');return;}document.getElementById('clientSearchModal').value='';document.getElementById('selectedClientId').value='';document.getElementById('paymentAmount').value='';document.getElementById('paymentMethod').value='';document.getElementById('paymentNote').value='';showModal('addPaymentModal');}
+function addClient(event){event.preventDefault();const name=document.getElementById('clientName').value.trim();const phone=document.getElementById('clientPhone').value.trim();const disbursementDate=document.getElementById('clientDisbursementDate').value;const frequency=document.getElementById('clientFrequency').value;const quota=parseFloat(document.getElementById('clientQuota').value);const term=parseInt(document.getElementById('clientTerm').value);const newClient={id:Date.now().toString(),name:name,phone:phone,disbursementDate:disbursementDate,frequency:frequency,quota:quota,term:term,createdAt:getPeruvianISOString()};clients.push(newClient);saveData();updateDisplay();closeModal('addClientModal');}
+function addPayment(event){event.preventDefault();const clientId=document.getElementById('selectedClientId').value;const amount=parseFloat(document.getElementById('paymentAmount').value);const method=document.getElementById('paymentMethod').value;const note=document.getElementById('paymentNote').value.trim();const date=document.getElementById('dateFilter').value;if(!clientId){alert('Por favor selecciona un cliente de la lista');return;}const newPayment={id:Date.now().toString(),clientId:clientId,amount:amount,method:method,note:note,date:date,timestamp:getPeruvianISOString()};payments.push(newPayment);saveData();updateDisplay();closeModal('addPaymentModal');}
+function deleteClient(clientId,event){if(event)event.stopPropagation();if(confirm('¿Estás seguro de eliminar este cliente? Se mantendrán los pagos históricos.')){clients=clients.filter(c=>c.id!==clientId);saveData();updateDisplay();}}
+function deletePayment(paymentId){if(confirm('¿Estás seguro de eliminar este pago?')){payments=payments.filter(p=>p.id!==paymentId);saveData();updateDisplay();}}
+document.getElementById('dateFilter').addEventListener('change',updateDisplay);
+window.onclick=function(event){if(event.target.classList.contains('modal')){const modalId=event.target.id;closeModal(modalId);}}
+document.addEventListener('touchstart',function(e){if(e.touches.length>1){e.preventDefault();}});
+function showPaymentSchedule(clientId){const client=clients.find(c=>c.id===clientId);if(!client||!client.disbursementDate||!client.term){alert('No se puede generar el cronograma. Faltan datos del cliente.');return;}const clientPayments=payments.filter(p=>p.clientId===clientId);const paymentDates=[];const startDate=new Date(client.disbursementDate+'T00:00:00');let currentDate=new Date(startDate);let paymentCount=0;while(paymentCount<client.term){if(shouldPayOnDate(client,currentDate.toISOString().split('T')[0])){paymentDates.push(new Date(currentDate));paymentCount++;}currentDate.setDate(currentDate.getDate()+1);if(currentDate>new Date(startDate.getTime()+(365*24*60*60*1000))){break;}}let scheduleHTML=`<div style="margin-bottom:20px;"><h4 style="margin:0;">Cliente: ${client.name}</h4><p style="margin:5px 0;color:#666;">ID: ${client.id}</p></div><table class="schedule-table"><thead><tr><th>N°</th><th>Fecha</th><th>Monto</th><th>Estado</th><th>Pagado</th></tr></thead><tbody>`;const today=getPeruvianDateString();let totalPagado=0;paymentDates.forEach((date,index)=>{const dateStr=date.toISOString().split('T')[0];const formattedDate=formatPeruvianDate(dateStr);const paymentsOnDate=clientPayments.filter(p=>p.date===dateStr);const amountPaid=paymentsOnDate.reduce((sum,p)=>sum+p.amount,0);totalPagado+=amountPaid;let status='';let statusClass='';if(paymentsOnDate.length>0){status='Pagado';statusClass='paid';}else if(dateStr<today){status='Vencido';statusClass='pending';}else if(dateStr===today){status='Hoy';statusClass='pending';}else{status='Pendiente';statusClass='future';}scheduleHTML+=`<tr class="${statusClass}"><td>${index+1}</td><td>${formattedDate}</td><td>S/${client.quota.toFixed(2)}</td><td>${status}</td><td>${amountPaid>0?`S/${amountPaid.toFixed(2)}`:'-'}</td></tr>`;});const totalEsperado=client.quota*client.term;const saldoPendiente=totalEsperado-totalPagado;scheduleHTML+=`</tbody></table><div style="margin-top:20px;padding:15px;background:#f8f9fa;border-radius:8px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><strong>Total esperado:</strong><span>S/${totalEsperado.toFixed(2)}</span></div><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><strong>Total pagado:</strong><span style="color:#28a745;">S/${totalPagado.toFixed(2)}</span></div><div style="display:flex;justify-content:space-between;"><strong>Saldo pendiente:</strong><span style="color:#dc3545;">S/${saldoPendiente.toFixed(2)}</span></div></div>`;document.getElementById('scheduleModalContent').innerHTML=scheduleHTML;showModal('scheduleModal');}
+function updateQuotas(){let updated=0;excelClients.forEach(excelClient=>{const existingClient=clients.find(c=>c.id===excelClient.id);if(existingClient&&(!existingClient.quota||existingClient.quota===0)){existingClient.quota=excelClient.quota;updated++;}});if(updated>0){saveData();updateDisplay();alert(`Se actualizaron las cuotas de ${updated} clientes`);}else{alert('Todos los clientes ya tienen sus cuotas actualizadas');}}
+function showEditClientModal(clientId){const client=clients.find(c=>c.id===clientId);if(!client)return;document.getElementById('editClientId').value=client.id;document.getElementById('editClientName').value=client.name;document.getElementById('editClientPhone').value=client.phone||'';document.getElementById('editClientDisbursementDate').value=client.disbursementDate||'';document.getElementById('editClientFrequency').value=client.frequency||'';document.getElementById('editClientQuota').value=client.quota||'';document.getElementById('editClientTerm').value=client.term||'';showModal('editClientModal');}
+function updateClient(event){event.preventDefault();const clientId=document.getElementById('editClientId').value;const client=clients.find(c=>c.id===clientId);if(!client)return;client.name=document.getElementById('editClientName').value.trim();client.phone=document.getElementById('editClientPhone').value.trim();client.disbursementDate=document.getElementById('editClientDisbursementDate').value;client.frequency=document.getElementById('editClientFrequency').value;client.quota=parseFloat(document.getElementById('editClientQuota').value);client.term=parseInt(document.getElementById('editClientTerm').value);saveData();updateDisplay();closeModal('editClientModal');alert('Cliente actualizado exitosamente');}
+function quickPayment(clientId){const client=clients.find(c=>c.id===clientId);if(!client)return;const date=document.getElementById('dateFilter').value;document.getElementById('clientSearchModal').value=client.name;document.getElementById('selectedClientId').value=client.id;document.getElementById('paymentAmount').value=client.quota||'';document.getElementById('paymentMethod').value='efectivo';document.getElementById('paymentNote').value='Pago rápido';showModal('addPaymentModal');}
+init();
+</script>
 </body>
 </html>

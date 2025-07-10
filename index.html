@@ -457,8 +457,9 @@
             position: relative;
         }
 
+        /* MODIFICADO: Altura fija para mostrar exactamente 4 clientes con scroll */
         .clients-container {
-            max-height: 320px;
+            height: 460px;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
@@ -865,6 +866,18 @@
                 font-size: 15px;
                 padding: 14px 24px;
             }
+            
+            /* Ajuste específico para iPhone 12 Pro */
+            .clients-container {
+                height: 460px;
+            }
+        }
+        
+        /* Ajuste adicional para cuando hay exactamente 4 clientes */
+        .clients-container.four-clients {
+            height: auto;
+            max-height: none;
+            overflow: visible;
         }
     </style>
 </head>

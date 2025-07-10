@@ -1344,7 +1344,7 @@
                 }[client.frequency];
 
                 return `
-                    <div class="client-item" onclick="showClientDetails('${client.id}')">
+                    <div class="client-item" onclick="showClientDetailsModal('${client.id}')">
                         <div>
                             <div class="client-name">
                                 ${client.name}
@@ -1357,13 +1357,12 @@
                             <span class="client-status ${hasPaid ? 'status-paid' : 'status-pending'}">
                                 ${hasPaid ? 'Pagó' : 'Pendiente'}
                             </span>
-                            ${client.phone ? `
-                            <button class="call-btn" onclick="makeCall('${client.phone}'); event.stopPropagation();" title="Llamar por teléfono">
-                                📞
+                            <button class="btn-secondary" onclick="showEditClientModal('${client.id}'); event.stopPropagation();" title="Modificar cliente" style="padding: 6px 12px; font-size: 13px;">
+                                ✏️
                             </button>
-                            <button class="whatsapp-btn" onclick="openWhatsApp('${client.phone}'); event.stopPropagation();" title="Abrir chat de WhatsApp">
-                                📱
-                            </button>` : ''}
+                            <button class="btn-primary" onclick="quickPayment('${client.id}'); event.stopPropagation();" title="Pago rápido" style="padding: 6px 12px; font-size: 13px;">
+                                💰
+                            </button>
                             <button class="btn-danger" onclick="deleteClient('${client.id}', event)">×</button>
                         </div>
                     </div>
@@ -1573,33 +1572,6 @@
                 saveData();
                 updateDisplay();
             }
-        }
-
-        // Mostrar detalles del cliente
-        function showClientDetails(clientId) {
-            const client = clients.find(c => c.id === clientId);
-            const clientPayments = payments.filter(p => p.clientId === clientId);
-            const totalPaid = clientPayments.reduce((sum, p) => sum + p.amount, 0);
-            
-            let nextPaymentDate = 'N/A';
-            if (client.disbursementDate) {
-                const today = getPeruvianDate();
-                const tomorrow = new Date(today);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                
-                // Buscar la próxima fecha de pago
-                for (let i = 0; i < 60; i++) { // Buscar en los próximos 60 días
-                    const checkDate = new Date(tomorrow);
-                    checkDate.setDate(checkDate.getDate() + i);
-                    
-                    if (shouldPayOnDate(client, checkDate.toISOString().split('T')[0])) {
-                        nextPaymentDate = checkDate.toLocaleDateString('es-PE');
-                        break;
-                    }
-                }
-            }
-            
-            alert(`Cliente: ${client.name}\nID: ${client.id}\nTeléfono: ${client.phone || 'No registrado'}\nFecha de desembolso: ${client.disbursementDate ? formatPeruvianDate(client.disbursementDate) : 'N/A'}\nFrecuencia: ${client.frequency || 'N/A'}\nCuota: S/${client.quota ? client.quota.toFixed(2) : '0.00'}\nPlazo: ${client.term || 'N/A'} cuotas\nPróximo pago: ${nextPaymentDate}\n\nTotal pagado (histórico): S/${totalPaid.toFixed(2)}\nNúmero de pagos: ${clientPayments.length}`);
         }
 
         // Event listener para cambio de fecha

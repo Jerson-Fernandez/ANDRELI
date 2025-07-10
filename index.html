@@ -478,6 +478,14 @@
             -webkit-overflow-scrolling: touch;
         }
 
+        /* MODIFICADO: Con altura fija para mostrar exactamente 6 clientes */
+        .clients-container {
+            height: 456px; /* Altura para mostrar exactamente 6 clientes (76px por cliente × 6 = 456px) */
+            overflow-y: auto;
+            overflow-x: hidden; /* Prevenir scroll horizontal */
+            -webkit-overflow-scrolling: touch;
+        }
+
         .no-results {
             text-align: center;
             padding: 20px;

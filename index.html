@@ -457,9 +457,9 @@
             position: relative;
         }
 
-        /* MODIFICADO: Altura fija para mostrar exactamente 4 clientes con scroll */
+        /* MODIFICADO: Sin altura fija, comportamiento normal de scroll */
         .clients-container {
-            height: 460px;
+            /* Removido height fijo */
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
@@ -668,6 +668,7 @@
             display: flex;
             gap: 10px;
             margin-top: 15px;
+            flex-wrap: wrap;
         }
 
         .btn-action {
@@ -681,6 +682,7 @@
             transition: all 0.2s;
             -webkit-appearance: none;
             appearance: none;
+            min-width: 80px;
         }
 
         .btn-call {
@@ -700,6 +702,16 @@
 
         .btn-schedule {
             background: #6c757d;
+            color: white;
+        }
+
+        .btn-edit-client {
+            background: #FFA500;
+            color: white;
+        }
+
+        .btn-delete-client {
+            background: #FF3B30;
             color: white;
         }
 
@@ -866,18 +878,6 @@
                 font-size: 15px;
                 padding: 14px 24px;
             }
-            
-            /* Ajuste específico para iPhone 12 Pro */
-            .clients-container {
-                height: 460px;
-            }
-        }
-        
-        /* Ajuste adicional para cuando hay exactamente 4 clientes */
-        .clients-container.four-clients {
-            height: auto;
-            max-height: none;
-            overflow: visible;
         }
     </style>
 </head>
@@ -1333,7 +1333,7 @@
             }
         }
 
-        // NUEVA FUNCIÓN: Mostrar modal de detalles del cliente
+        // NUEVA FUNCIÓN: Mostrar modal de detalles del cliente (MODIFICADO para incluir botones de editar y eliminar)
         function showClientDetailsModal(clientId) {
             const client = clients.find(c => c.id === clientId);
             if (!client) return;
@@ -1400,13 +1400,26 @@
                             📱 WhatsApp
                         </button>
                     ` : ''}
-                    <button class="btn-action btn-close-detail" onclick="closeModal('clientDetailsModal')">
-                        Cerrar
+                    <button class="btn-action btn-edit-client" onclick="showEditClientModal('${client.id}'); closeModal('clientDetailsModal');">
+                        ✏️ Modificar
+                    </button>
+                    <button class="btn-action btn-delete-client" onclick="deleteClientFromDetails('${client.id}')">
+                        🗑️ Eliminar
                     </button>
                 </div>
             `;
             
             showModal('clientDetailsModal');
+        }
+
+        // NUEVA FUNCIÓN: Eliminar cliente desde el modal de detalles
+        function deleteClientFromDetails(clientId) {
+            if (confirm('¿Estás seguro de eliminar este cliente? Se mantendrán los pagos históricos.')) {
+                clients = clients.filter(c => c.id !== clientId);
+                saveData();
+                updateDisplay();
+                closeModal('clientDetailsModal');
+            }
         }
 
         // NUEVA FUNCIÓN: Obtener la próxima fecha de pago
@@ -1544,7 +1557,7 @@
             document.getElementById('totalYape').textContent = `S/${yapeTotal.toFixed(2)}`;
         }
 
-        // Actualizar lista de clientes (MODIFICADO para incluir cuota)
+        // Actualizar lista de clientes (MODIFICADO para remover botones)
         function updateClientsList(date) {
             const clientsList = document.getElementById('clientsList');
             const dayPayments = payments.filter(p => p.date === date);
@@ -1570,8 +1583,8 @@
                 }[client.frequency];
 
                 return `
-                    <div class="client-item" style="padding: 20px 15px; display: block;">
-                        <div onclick="showClientDetailsModal('${client.id}')">
+                    <div class="client-item" onclick="showClientDetailsModal('${client.id}')">
+                        <div style="flex: 1;">
                             <div style="font-weight: 600; font-size: 16px; color: #333; margin-bottom: 8px;">
                                 ${client.name}
                             </div>
@@ -1584,22 +1597,15 @@
                                 </span>
                                 ${client.quota ? `<span class="client-quota" style="font-size: 14px;">S/${client.quota.toFixed(2)}</span>` : ''}
                             </div>
-                            ${hasPaid ? `<div style="font-size: 12px; color: #666; margin-bottom: 15px;">Pagó: S/${totalPaid.toFixed(2)}</div>` : '<div style="margin-bottom: 15px;"></div>'}
+                            ${hasPaid ? `<div style="font-size: 12px; color: #666;">Pagó: S/${totalPaid.toFixed(2)}</div>` : ''}
                         </div>
-                        <div style="display: flex; gap: 12px; justify-content: flex-start; margin-top: 15px;">
-                            <button class="btn-circle btn-edit" onclick="showEditClientModal('${client.id}'); event.stopPropagation();" title="Modificar cliente">
-                                ✏️
-                            </button>
-                            <button class="btn-circle btn-pay" onclick="quickPayment('${client.id}'); event.stopPropagation();" title="Pago rápido">
-                                💰
-                            </button>
-                            <button class="btn-circle btn-delete" onclick="deleteClient('${client.id}', event)" title="Eliminar">
-                                ×
-                            </button>
-                        </div>
+                        <button class="btn-circle btn-pay" onclick="quickPayment('${client.id}'); event.stopPropagation();" title="Pago rápido">
+                            💰
+                        </button>
                     </div>
                 `;
             }).join('');
+        
         }
 
         // Actualizar lista de pagos (MODIFICADO para incluir ID)

@@ -470,9 +470,9 @@
             position: relative;
         }
 
-        /* MODIFICADO: Con altura fija para mostrar solo 6 clientes */
+        /* MODIFICADO: Con altura fija para mostrar exactamente 6 clientes */
         .clients-container {
-            height: 480px; /* Altura para mostrar aproximadamente 6 clientes */
+            height: 456px; /* Altura para mostrar exactamente 6 clientes (76px por cliente × 6 = 456px) */
             overflow-y: auto;
             overflow-x: hidden; /* Prevenir scroll horizontal */
             -webkit-overflow-scrolling: touch;
@@ -1621,7 +1621,6 @@
                     </div>
                 `;
             }).join('');
-        
         }
 
         // Actualizar lista de pagos (MODIFICADO para incluir ID)

@@ -1087,17 +1087,21 @@
                         <!-- Aquí se mostrarán los clientes filtrados -->
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Monto</label>
-                    <input type="number" class="form-input" id="paymentAmount" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Método de Pago</label>
-                    <select class="form-input" id="paymentMethod" required>
-                        <option value="">Seleccionar método...</option>
-                        <option value="efectivo">💵 Efectivo</option>
-                        <option value="yape">📱 Yape</option>
-                    </select>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label class="form-label">💵 Monto en Efectivo</label>
+                        <input type="number" class="form-input" id="paymentAmountCash" step="0.01" value="0" min="0" onkeyup="updatePaymentTotal()" onchange="updatePaymentTotal()">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label class="form-label">📱 Monto en Yape</label>
+                        <input type="number" class="form-input" id="paymentAmountYape" step="0.01" value="0" min="0" onkeyup="updatePaymentTotal()" onchange="updatePaymentTotal()">
+                    </div>
+                    <div style="border-top: 2px solid #dee2e6; padding-top: 10px; margin-top: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 600; font-size: 16px;">Total:</span>
+                            <span id="paymentTotal" style="font-size: 20px; font-weight: bold; color: #667eea;">S/0.00</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Nota (opcional)</label>
@@ -1623,6 +1627,15 @@
             }).join('');
         }
 
+        // Función para actualizar el total del pago
+        function updatePaymentTotal() {
+            const cashAmount = parseFloat(document.getElementById('paymentAmountCash').value) || 0;
+            const yapeAmount = parseFloat(document.getElementById('paymentAmountYape').value) || 0;
+            const total = cashAmount + yapeAmount;
+            
+            document.getElementById('paymentTotal').textContent = `S/${total.toFixed(2)}`;
+        }
+
         // Actualizar lista de pagos (MODIFICADO para incluir ID)
         function updatePaymentsList(date) {
             const paymentsList = document.getElementById('paymentsList');
@@ -1633,32 +1646,62 @@
                 return;
             }
 
-            paymentsList.innerHTML = dayPayments
-                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                .map(payment => {
-                    const client = clients.find(c => c.id === payment.clientId);
+            // Agrupar pagos por timestamp para mostrar pagos parciales juntos
+            const groupedPayments = {};
+            dayPayments.forEach(payment => {
+                if (!groupedPayments[payment.timestamp]) {
+                    groupedPayments[payment.timestamp] = [];
+                }
+                groupedPayments[payment.timestamp].push(payment);
+            });
+
+            // Ordenar grupos por timestamp descendente
+            const sortedGroups = Object.entries(groupedPayments)
+                .sort((a, b) => new Date(b[0]) - new Date(a[0]));
+
+            paymentsList.innerHTML = sortedGroups.map(([timestamp, paymentGroup]) => {
+                const client = clients.find(c => c.id === paymentGroup[0].clientId);
+                const totalAmount = paymentGroup.reduce((sum, p) => sum + p.amount, 0);
+                
+                // Verificar si es un pago mixto
+                const hasCash = paymentGroup.some(p => p.method === 'efectivo');
+                const hasYape = paymentGroup.some(p => p.method === 'yape');
+                const isMixed = hasCash && hasYape;
+                
+                let methodDisplay = '';
+                if (isMixed) {
+                    const cashAmount = paymentGroup.filter(p => p.method === 'efectivo').reduce((sum, p) => sum + p.amount, 0);
+                    const yapeAmount = paymentGroup.filter(p => p.method === 'yape').reduce((sum, p) => sum + p.amount, 0);
+                    methodDisplay = `
+                        <span class="payment-method method-efectivo">💵 S/${cashAmount.toFixed(2)}</span>
+                        <span class="payment-method method-yape">📱 S/${yapeAmount.toFixed(2)}</span>
+                    `;
+                } else {
+                    const payment = paymentGroup[0];
                     const methodIcon = payment.method === 'yape' ? '📱' : '💵';
                     const methodClass = payment.method === 'yape' ? 'method-yape' : 'method-efectivo';
                     const methodText = payment.method === 'yape' ? 'Yape' : 'Efectivo';
-                    
-                    return `
-                        <div class="payment-item">
-                            <div class="payment-id">ID: ${client ? client.id : 'N/A'}</div>
-                            <div class="payment-client">
-                                ${client ? client.name : 'Cliente eliminado'}
-                                <span class="payment-method ${methodClass}">${methodIcon} ${methodText}</span>
-                            </div>
-                            <div class="payment-details">
-                                <span>${payment.note || 'Sin nota'}</span>
-                                <span class="payment-amount">S/${payment.amount.toFixed(2)}</span>
-                            </div>
-                            <div class="payment-details">
-                                <span>${formatPeruvianTime(payment.timestamp)}</span>
-                                <button class="btn-danger" onclick="deletePayment('${payment.id}')">Eliminar</button>
-                            </div>
+                    methodDisplay = `<span class="payment-method ${methodClass}">${methodIcon} ${methodText}</span>`;
+                }
+                
+                return `
+                    <div class="payment-item">
+                        <div class="payment-id">ID: ${client ? client.id : 'N/A'}</div>
+                        <div class="payment-client">
+                            ${client ? client.name : 'Cliente eliminado'}
+                            ${methodDisplay}
                         </div>
-                    `;
-                }).join('');
+                        <div class="payment-details">
+                            <span>${paymentGroup[0].note || 'Sin nota'}</span>
+                            <span class="payment-amount">S/${totalAmount.toFixed(2)}</span>
+                        </div>
+                        <div class="payment-details">
+                            <span>${formatPeruvianTime(paymentGroup[0].timestamp)}</span>
+                            <button class="btn-danger" onclick="deletePaymentGroup('${timestamp}')">Eliminar</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // Mostrar dropdown de clientes
@@ -1704,7 +1747,10 @@
             
             // Auto-completar el monto con la cuota del cliente
             if (quota && quota > 0) {
-                document.getElementById('paymentAmount').value = quota;
+                // Por defecto, poner toda la cuota en efectivo
+                document.getElementById('paymentAmountCash').value = quota;
+                document.getElementById('paymentAmountYape').value = 0;
+                updatePaymentTotal();
             }
         }
 
@@ -1748,6 +1794,9 @@
             if (modalId === 'addPaymentModal') {
                 document.getElementById('clientSearchModal').value = '';
                 document.getElementById('selectedClientId').value = '';
+                document.getElementById('paymentAmountCash').value = '0';
+                document.getElementById('paymentAmountYape').value = '0';
+                updatePaymentTotal();
                 hideClientDropdown();
             }
         }
@@ -1771,9 +1820,10 @@
             }
             document.getElementById('clientSearchModal').value = '';
             document.getElementById('selectedClientId').value = '';
-            document.getElementById('paymentAmount').value = '';
-            document.getElementById('paymentMethod').value = '';
+            document.getElementById('paymentAmountCash').value = '0';
+            document.getElementById('paymentAmountYape').value = '0';
             document.getElementById('paymentNote').value = '';
+            updatePaymentTotal();
             showModal('addPaymentModal');
         }
 
@@ -1810,8 +1860,8 @@
             event.preventDefault();
             
             const clientId = document.getElementById('selectedClientId').value;
-            const amount = parseFloat(document.getElementById('paymentAmount').value);
-            const method = document.getElementById('paymentMethod').value;
+            const cashAmount = parseFloat(document.getElementById('paymentAmountCash').value) || 0;
+            const yapeAmount = parseFloat(document.getElementById('paymentAmountYape').value) || 0;
             const note = document.getElementById('paymentNote').value.trim();
             const date = document.getElementById('dateFilter').value;
             
@@ -1820,17 +1870,41 @@
                 return;
             }
             
-            const newPayment = {
-                id: Date.now().toString(),
-                clientId: clientId,
-                amount: amount,
-                method: method,
-                note: note,
-                date: date,
-                timestamp: getPeruvianISOString()
-            };
+            if (cashAmount === 0 && yapeAmount === 0) {
+                alert('Por favor ingresa al menos un monto');
+                return;
+            }
             
-            payments.push(newPayment);
+            const timestamp = getPeruvianISOString();
+            
+            // Crear pago en efectivo si hay monto
+            if (cashAmount > 0) {
+                const cashPayment = {
+                    id: Date.now().toString() + '_cash',
+                    clientId: clientId,
+                    amount: cashAmount,
+                    method: 'efectivo',
+                    note: note + (yapeAmount > 0 ? ' (Pago parcial - Efectivo)' : ''),
+                    date: date,
+                    timestamp: timestamp
+                };
+                payments.push(cashPayment);
+            }
+            
+            // Crear pago en Yape si hay monto
+            if (yapeAmount > 0) {
+                const yapePayment = {
+                    id: Date.now().toString() + '_yape',
+                    clientId: clientId,
+                    amount: yapeAmount,
+                    method: 'yape',
+                    note: note + (cashAmount > 0 ? ' (Pago parcial - Yape)' : ''),
+                    date: date,
+                    timestamp: timestamp
+                };
+                payments.push(yapePayment);
+            }
+            
             saveData();
             updateDisplay();
             closeModal('addPaymentModal');
@@ -1850,6 +1924,16 @@
         function deletePayment(paymentId) {
             if (confirm('¿Estás seguro de eliminar este pago?')) {
                 payments = payments.filter(p => p.id !== paymentId);
+                saveData();
+                updateDisplay();
+            }
+        }
+
+        // Nueva función para eliminar grupo de pagos
+        function deletePaymentGroup(timestamp) {
+            if (confirm('¿Estás seguro de eliminar este pago?')) {
+                // Eliminar todos los pagos con el mismo timestamp
+                payments = payments.filter(p => p.timestamp !== timestamp);
                 saveData();
                 updateDisplay();
             }
@@ -2066,9 +2150,10 @@
             // Configurar el modal de pago con los datos del cliente
             document.getElementById('clientSearchModal').value = client.name;
             document.getElementById('selectedClientId').value = client.id;
-            document.getElementById('paymentAmount').value = client.quota || '';
-            document.getElementById('paymentMethod').value = 'efectivo'; // Por defecto efectivo
+            document.getElementById('paymentAmountCash').value = client.quota || '';
+            document.getElementById('paymentAmountYape').value = '0';
             document.getElementById('paymentNote').value = 'Pago rápido';
+            updatePaymentTotal();
             
             showModal('addPaymentModal');
         }

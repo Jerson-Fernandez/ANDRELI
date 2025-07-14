@@ -219,19 +219,25 @@ function mapFrequency(freq){
   if(!freq)return'';
   const upperFreq=freq.toUpperCase().trim();
   
-  // Mapeos exactos primero
+  // Mapeos de abreviaturas del Excel
+  if(upperFreq==='DIAR')return'DIARIO';
+  if(upperFreq==='SEMA')return'SEMANAL';
+  if(upperFreq==='QUIN')return'QUINCENAL';
+  if(upperFreq==='MENS')return'MENSUAL';
+  
+  // Mapeos exactos completos
   if(upperFreq==='DIARIO'||upperFreq==='DIARIA')return'DIARIO';
   if(upperFreq==='SEMANAL')return'SEMANAL';
   if(upperFreq==='QUINCENAL')return'QUINCENAL';
   if(upperFreq==='MENSUAL')return'MENSUAL';
   
-  // Mapeos parciales
+  // Mapeos parciales (por si acaso)
   if(upperFreq.includes('DIAR'))return'DIARIO';
-  if(upperFreq.includes('SEMAN'))return'SEMANAL';
-  if(upperFreq.includes('QUINCEN'))return'QUINCENAL';
+  if(upperFreq.includes('SEMA'))return'SEMANAL';
+  if(upperFreq.includes('QUIN'))return'QUINCENAL';
   if(upperFreq.includes('MENS'))return'MENSUAL';
   
-  // Abreviaciones comunes
+  // Abreviaciones de una letra
   if(upperFreq==='D')return'DIARIO';
   if(upperFreq==='S')return'SEMANAL';
   if(upperFreq==='Q')return'QUINCENAL';

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <title>Sistema de Pagos Andreli</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -10,127 +10,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#667eea">
 <meta name="format-detection" content="telephone=no">
-<style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background-color:#f5f5f5;color:#333;min-height:100vh;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;-webkit-user-select:none;user-select:none;scroll-behavior:smooth}
-input,textarea{-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important}
-.header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:20px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.1);padding-top:calc(20px + env(safe-area-inset-top));position:sticky;top:0;z-index:100}
-.header h1{font-size:24px;font-weight:600}
-.container{padding:20px;max-width:600px;margin:0 auto;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
-.stats-card{background:white;border-radius:15px;padding:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
-.payment-method{display:inline-block;padding:3px 8px;border-radius:6px;font-size:12px;font-weight:500;margin-left:8px}
-.method-efectivo{background:#e8f5e9;color:#2e7d32}
-.method-yape{background:#e3f2fd;color:#1565c0}
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:10px}
-.stat-item{text-align:center}
-.stat-value{font-size:28px;font-weight:bold;color:#667eea}
-.stat-label{font-size:14px;color:#666;margin-top:5px}
-.section-title{font-size:18px;font-weight:600;margin-bottom:15px;color:#333}
-.btn-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;padding:15px 30px;border-radius:10px;font-size:16px;font-weight:600;width:100%;cursor:pointer;transition:transform 0.2s;margin-bottom:15px;-webkit-appearance:none;appearance:none;touch-action:manipulation}
-.btn-primary:active{transform:scale(0.98);opacity:0.9}
-.btn-secondary{background:#f0f0f0;color:#333;border:none;padding:12px 20px;border-radius:8px;font-size:14px;cursor:pointer;transition:background 0.2s;-webkit-appearance:none;appearance:none}
-.btn-secondary:active{background:#e0e0e0}
-.client-list{background:white;border-radius:15px;padding:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
-.client-item{padding:20px 15px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.2s;display:flex;justify-content:space-between;align-items:center;min-height:60px;-webkit-tap-highlight-color:rgba(0,0,0,0.1)}
-.client-item:active{background:#f9f9f9}
-.client-item:last-child{border-bottom:none}
-.client-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
-.client-info{flex:1;min-width:0}
-.client-name{font-weight:600;color:#333;font-size:16px;line-height:1.3;margin-bottom:5px;word-wrap:break-word}
-.client-payment-info{font-size:13px;color:#666;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
-.client-status{font-size:12px;padding:4px 10px;border-radius:12px;font-weight:500;white-space:nowrap}
-.status-paid{background:#d4edda;color:#155724}
-.status-pending{background:#fff3cd;color:#856404}
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0);z-index:1000;transition:background-color 0.25s ease-out}
-.modal.show{background:rgba(0,0,0,0.5)}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.modal-content{background:white;padding:20px;width:calc(100% - 40px);max-width:500px;border-radius:15px;max-height:calc(100vh - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);animation:slideIn 0.3s}
-@keyframes slideIn{from{transform:translate(-50%,-50%) translateY(-50px);opacity:0}to{transform:translate(-50%,-50%) translateY(0);opacity:1}}
-.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-.modal-title{font-size:20px;font-weight:600}
-.close-btn{font-size:24px;cursor:pointer;color:#999;background:none;border:none;-webkit-appearance:none;appearance:none}
-.form-group{margin-bottom:20px}
-.form-label{display:block;margin-bottom:8px;font-weight:500;color:#333}
-.form-input{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:16px;transition:border 0.2s;-webkit-appearance:none;appearance:none;background-color:white;touch-action:manipulation;-webkit-user-select:text!important;user-select:text!important}
-.form-input:focus{outline:none;border-color:#667eea;font-size:16px}
-input[type="date"]{min-height:44px;padding:12px}
-.payment-history{background:white;border-radius:15px;padding:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
-.payments-container{height:720px;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.payment-item{padding:12px;border-bottom:1px solid #f0f0f0}
-.payment-item:last-child{border-bottom:none}
-.payment-client{font-weight:500;color:#333}
-.payment-details{display:flex;justify-content:space-between;margin-top:5px;font-size:14px;color:#666}
-.payment-amount{color:#28a745;font-weight:600}
-.empty-state{text-align:center;padding:40px;color:#999}
-.search-container{margin-bottom:15px}
-.search-input{margin-bottom:0;background:#f8f9fa;border:1px solid #e0e0e0;-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important}
-.search-input:focus{background:white;border-color:#667eea}
-.client-item.hidden{display:none}
-.client-dropdown{position:absolute;background:white;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:1001;width:100%;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
-.dropdown-item{padding:12px;cursor:pointer;border-bottom:1px solid #f0f0f0;transition:background 0.2s}
-.dropdown-item:hover{background:#f8f9fa}
-.dropdown-item:last-child{border-bottom:none}
-.dropdown-item-name{font-weight:500;color:#333}
-.dropdown-item-phone{font-size:12px;color:#666;margin-top:2px}
-.form-group{margin-bottom:20px;position:relative}
-.clients-container{height:456px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
-.no-results{text-align:center;padding:20px;color:#999;font-style:italic}
-.date-filter{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:15px;background:white;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
-.btn-danger{background:#dc3545;color:white;border:none;padding:8px 16px;border-radius:6px;font-size:14px;cursor:pointer;margin-left:10px;-webkit-appearance:none;appearance:none}
-.btn-danger:active{background:#c82333}
-.frequency-badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:500;margin-left:5px}
-.freq-diario{background:#e8f5e9;color:#2e7d32}
-.freq-semanal{background:#e3f2fd;color:#1565c0}
-.freq-quincenal{background:#fce4ec;color:#c2185b}
-.freq-mensual{background:#f3e5f5;color:#7b1fa2}
-.whatsapp-btn{background:#25D366;color:white;border:none;padding:8px 12px;border-radius:50%;font-size:16px;cursor:pointer;margin-left:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;transition:background 0.2s,transform 0.2s;-webkit-appearance:none;appearance:none}
-.whatsapp-btn:active{background:#128C7E;transform:scale(0.95)}
-.call-btn{background:#007AFF;color:white;border:none;padding:8px 12px;border-radius:50%;font-size:16px;cursor:pointer;margin-left:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;transition:background 0.2s,transform 0.2s;-webkit-appearance:none;appearance:none}
-.call-btn:active{background:#0056CC;transform:scale(0.95)}
-.client-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.client-actions button{min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center}
-.client-quota{background:#f0f4ff;color:#1a5490;padding:2px 8px;border-radius:6px;font-size:13px;font-weight:600;margin-left:8px}
-.payment-id{font-size:14px;color:#666;margin-bottom:3px;font-weight:600}
-.general-search-container{background:white;border-radius:15px;padding:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
-.search-results{margin-top:15px;max-height:300px;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.search-result-item{padding:15px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.2s}
-.search-result-item:hover{background:#f9f9f9}
-.search-result-item:last-child{border-bottom:none}
-.client-detail-info{margin-top:15px;padding:15px;background:#f9f9f9;border-radius:8px}
-.detail-row{display:flex;justify-content:space-between;margin-bottom:10px;font-size:14px}
-.detail-label{font-weight:500;color:#666}
-.detail-value{color:#333;font-weight:600}
-.action-buttons{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}
-.btn-action{flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s;-webkit-appearance:none;appearance:none;min-width:80px}
-.btn-call{background:#007AFF;color:white}
-.btn-whatsapp{background:#25D366;color:white}
-.btn-close-detail{background:#f0f0f0;color:#333}
-.btn-schedule{background:#6c757d;color:white}
-.btn-edit-client{background:#FFA500;color:white}
-.btn-delete-client{background:#FF3B30;color:white}
-.schedule-table{margin-top:20px;width:100%;border-collapse:collapse}
-.schedule-table th,.schedule-table td{padding:10px;border:1px solid #e0e0e0;text-align:left}
-.schedule-table th{background:#f8f9fa;font-weight:600;color:#333}
-.schedule-table tr:nth-child(even){background:#f8f9fa}
-.schedule-table .paid{background:#d4edda}
-.schedule-table .pending{background:#fff3cd}
-.schedule-table .future{background:white}
-#scheduleModal .modal-content{max-width:800px}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(102,126,234,0.7)}70%{box-shadow:0 0 0 20px rgba(102,126,234,0)}100%{box-shadow:0 0 0 0 rgba(102,126,234,0)}}
-.btn-primary,.btn-secondary,.btn-circle{transition:all 0.2s cubic-bezier(0.4,0,0.2,1);position:relative}
-.btn-primary:active,.btn-secondary:active,.btn-circle:active{transform:scale(0.95)}
-.btn-primary:hover,.btn-secondary:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(102,126,234,0.3)}
-.btn-circle:hover{transform:scale(1.1);box-shadow:0 4px 12px rgba(0,0,0,0.2)}
-.client-item{transition:all 0.3s ease}
-.client-item:hover{transform:translateX(5px);box-shadow:-5px 0 20px rgba(0,0,0,0.1)}
-.btn-circle{width:40px;height:40px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:all 0.2s;-webkit-appearance:none;appearance:none;flex-shrink:0}
-.btn-circle:active{transform:scale(0.95)}
-.btn-edit{background:#007AFF;color:white}
-.btn-pay{background:#34C759;color:white}
-.btn-delete{background:#FF3B30;color:white}
-@supports (-webkit-overflow-scrolling:touch){.payments-container,.clients-container,.search-results,.modal-content{-webkit-overflow-scrolling:touch}input[type="text"],input[type="number"],input[type="tel"],input[type="date"],select,textarea{font-size:16px!important;-webkit-appearance:none;-webkit-border-radius:0}.schedule-table{-webkit-transform:translateZ(0);transform:translateZ(0)}}
-@media only screen and (device-width:390px) and (device-height:844px) and (-webkit-device-pixel-ratio:3){.container{padding:15px}.client-item{padding:18px 12px}.btn-primary,.btn-secondary{font-size:15px;padding:14px 24px}}
-</style>
+<style>*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background-color:#f5f5f5;color:#333;min-height:100vh;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;-webkit-user-select:none;user-select:none;scroll-behavior:smooth}input,textarea{-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important}.header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:20px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.1);padding-top:calc(20px + env(safe-area-inset-top));position:sticky;top:0;z-index:100}.header h1{font-size:24px;font-weight:600}.container{padding:20px;max-width:600px;margin:0 auto;padding-bottom:calc(20px + env(safe-area-inset-bottom))}.stats-card{background:white;border-radius:15px;padding:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}.payment-method{display:inline-block;padding:3px 8px;border-radius:6px;font-size:12px;font-weight:500;margin-left:8px}.method-efectivo{background:#e8f5e9;color:#2e7d32}.method-yape{background:#e3f2fd;color:#1565c0}.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:10px}.stat-item{text-align:center}.stat-value{font-size:28px;font-weight:bold;color:#667eea}.stat-label{font-size:14px;color:#666;margin-top:5px}.section-title{font-size:18px;font-weight:600;margin-bottom:15px;color:#333}.btn-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;padding:15px 30px;border-radius:10px;font-size:16px;font-weight:600;width:100%;cursor:pointer;transition:transform 0.2s;margin-bottom:15px;-webkit-appearance:none;appearance:none;touch-action:manipulation}.btn-primary:active{transform:scale(0.98);opacity:0.9}.btn-secondary{background:#f0f0f0;color:#333;border:none;padding:12px 20px;border-radius:8px;font-size:14px;cursor:pointer;transition:background 0.2s;-webkit-appearance:none;appearance:none}.btn-secondary:active{background:#e0e0e0}.client-list{background:white;border-radius:15px;padding:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}.client-item{padding:20px 15px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.2s;display:flex;justify-content:space-between;align-items:center;min-height:60px;-webkit-tap-highlight-color:rgba(0,0,0,0.1)}.client-item:active{background:#f9f9f9}.client-item:last-child{border-bottom:none}.client-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}.client-info{flex:1;min-width:0}.client-name{font-weight:600;color:#333;font-size:16px;line-height:1.3;margin-bottom:5px;word-wrap:break-word}.client-payment-info{font-size:13px;color:#666;display:flex;align-items:center;flex-wrap:wrap;gap:8px}.client-status{font-size:12px;padding:4px 10px;border-radius:12px;font-weight:500;white-space:nowrap}.status-paid{background:#d4edda;color:#155724}.status-pending{background:#fff3cd;color:#856404}.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0);z-index:1000;transition:background-color 0.25s ease-out}.modal.show{background:rgba(0,0,0,0.5)}@keyframes fadeIn{from{opacity:0}to{opacity:1}}.modal-content{background:white;padding:20px;width:calc(100% - 40px);max-width:500px;border-radius:15px;max-height:calc(100vh - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);animation:slideIn 0.3s}@keyframes slideIn{from{transform:translate(-50%,-50%) translateY(-50px);opacity:0}to{transform:translate(-50%,-50%) translateY(0);opacity:1}}.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.modal-title{font-size:20px;font-weight:600}.close-btn{font-size:24px;cursor:pointer;color:#999;background:none;border:none;-webkit-appearance:none;appearance:none}.form-group{margin-bottom:20px}.form-label{display:block;margin-bottom:8px;font-weight:500;color:#333}.form-input{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:16px;transition:border 0.2s;-webkit-appearance:none;appearance:none;background-color:white;touch-action:manipulation;-webkit-user-select:text!important;user-select:text!important}.form-input:focus{outline:none;border-color:#667eea;font-size:16px}input[type="date"]{min-height:44px;padding:12px}.payment-history{background:white;border-radius:15px;padding:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}.payments-container{height:720px;overflow-y:auto;-webkit-overflow-scrolling:touch}.payment-item{padding:12px;border-bottom:1px solid #f0f0f0}.payment-item:last-child{border-bottom:none}.payment-client{font-weight:500;color:#333}.payment-details{display:flex;justify-content:space-between;margin-top:5px;font-size:14px;color:#666}.payment-amount{color:#28a745;font-weight:600}.empty-state{text-align:center;padding:40px;color:#999}.search-container{margin-bottom:15px}.search-input{margin-bottom:0;background:#f8f9fa;border:1px solid #e0e0e0;-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important}.search-input:focus{background:white;border-color:#667eea}.client-item.hidden{display:none}.client-dropdown{position:absolute;background:white;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:1001;width:100%;box-shadow:0 4px 10px rgba(0,0,0,0.1)}.dropdown-item{padding:12px;cursor:pointer;border-bottom:1px solid #f0f0f0;transition:background 0.2s}.dropdown-item:hover{background:#f8f9fa}.dropdown-item:last-child{border-bottom:none}.dropdown-item-name{font-weight:500;color:#333}.dropdown-item-phone{font-size:12px;color:#666;margin-top:2px}.form-group{margin-bottom:20px;position:relative}.clients-container{height:456px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}.no-results{text-align:center;padding:20px;color:#999;font-style:italic}.date-filter{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:15px;background:white;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}.btn-danger{background:#dc3545;color:white;border:none;padding:8px 16px;border-radius:6px;font-size:14px;cursor:pointer;margin-left:10px;-webkit-appearance:none;appearance:none}.btn-danger:active{background:#c82333}.frequency-badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:500;margin-left:5px}.freq-diario{background:#e8f5e9;color:#2e7d32}.freq-semanal{background:#e3f2fd;color:#1565c0}.freq-quincenal{background:#fce4ec;color:#c2185b}.freq-mensual{background:#f3e5f5;color:#7b1fa2}.whatsapp-btn{background:#25D366;color:white;border:none;padding:8px 12px;border-radius:50%;font-size:16px;cursor:pointer;margin-left:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;transition:background 0.2s,transform 0.2s;-webkit-appearance:none;appearance:none}.whatsapp-btn:active{background:#128C7E;transform:scale(0.95)}.call-btn{background:#007AFF;color:white;border:none;padding:8px 12px;border-radius:50%;font-size:16px;cursor:pointer;margin-left:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;transition:background 0.2s,transform 0.2s;-webkit-appearance:none;appearance:none}.call-btn:active{background:#0056CC;transform:scale(0.95)}.client-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}.client-actions button{min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center}.client-quota{background:#f0f4ff;color:#1a5490;padding:2px 8px;border-radius:6px;font-size:13px;font-weight:600;margin-left:8px}.payment-id{font-size:14px;color:#666;margin-bottom:3px;font-weight:600}.general-search-container{background:white;border-radius:15px;padding:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}.search-results{margin-top:15px;max-height:300px;overflow-y:auto;-webkit-overflow-scrolling:touch}.search-result-item{padding:15px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.2s}.search-result-item:hover{background:#f9f9f9}.search-result-item:last-child{border-bottom:none}.client-detail-info{margin-top:15px;padding:15px;background:#f9f9f9;border-radius:8px}.detail-row{display:flex;justify-content:space-between;margin-bottom:10px;font-size:14px}.detail-label{font-weight:500;color:#666}.detail-value{color:#333;font-weight:600}.action-buttons{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}.btn-action{flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s;-webkit-appearance:none;appearance:none;min-width:80px}.btn-call{background:#007AFF;color:white}.btn-whatsapp{background:#25D366;color:white}.btn-close-detail{background:#f0f0f0;color:#333}.btn-schedule{background:#6c757d;color:white}.btn-edit-client{background:#FFA500;color:white}.btn-delete-client{background:#FF3B30;color:white}.schedule-table{margin-top:20px;width:100%;border-collapse:collapse}.schedule-table th,.schedule-table td{padding:10px;border:1px solid #e0e0e0;text-align:left}.schedule-table th{background:#f8f9fa;font-weight:600;color:#333}.schedule-table tr:nth-child(even){background:#f8f9fa}.schedule-table .paid{background:#d4edda}.schedule-table .pending{background:#fff3cd}.schedule-table .future{background:white}#scheduleModal .modal-content{max-width:800px}@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(102,126,234,0.7)}70%{box-shadow:0 0 0 20px rgba(102,126,234,0)}100%{box-shadow:0 0 0 0 rgba(102,126,234,0)}}.btn-primary,.btn-secondary,.btn-circle{transition:all 0.2s cubic-bezier(0.4,0,0.2,1);position:relative}.btn-primary:active,.btn-secondary:active,.btn-circle:active{transform:scale(0.95)}.btn-primary:hover,.btn-secondary:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(102,126,234,0.3)}.btn-circle:hover{transform:scale(1.1);box-shadow:0 4px 12px rgba(0,0,0,0.2)}.client-item{transition:all 0.3s ease}.client-item:hover{transform:translateX(5px);box-shadow:-5px 0 20px rgba(0,0,0,0.1)}.btn-circle{width:40px;height:40px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:all 0.2s;-webkit-appearance:none;appearance:none;flex-shrink:0}.btn-circle:active{transform:scale(0.95)}.btn-edit{background:#007AFF;color:white}.btn-pay{background:#34C759;color:white}.btn-delete{background:#FF3B30;color:white}@supports (-webkit-overflow-scrolling:touch){.payments-container,.clients-container,.search-results,.modal-content{-webkit-overflow-scrolling:touch}input[type="text"],input[type="number"],input[type="tel"],input[type="date"],select,textarea{font-size:16px!important;-webkit-appearance:none;-webkit-border-radius:0}.schedule-table{-webkit-transform:translateZ(0);transform:translateZ(0)}}@media only screen and (device-width:390px) and (device-height:844px) and (-webkit-device-pixel-ratio:3){.container{padding:15px}.client-item{padding:18px 12px}.btn-primary,.btn-secondary{font-size:15px;padding:14px 24px}}</style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -155,177 +35,21 @@ function getPeruvianDate(date=new Date()){const peruTime=new Date(date.toLocaleS
 function getPeruvianDateString(date=new Date()){const options={timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'};const peruDateStr=date.toLocaleDateString('en-CA',options);return peruDateStr;}
 function getPeruvianISOString(date=new Date()){return new Date(date.toLocaleString("en-US",{timeZone:"America/Lima"})).toISOString();}
 function formatPeruvianTime(dateString){const date=new Date(dateString);return date.toLocaleTimeString('es-PE',{timeZone:'America/Lima',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
-function formatPeruvianDate(dateString){const [year,month,day]=dateString.split('-');return`${day}/${month}/${year}`;}
+function formatPeruvianDate(dateString){const[year,month,day]=dateString.split('-');return`${day}/${month}/${year}`;}
 function openWhatsApp(phone){if(!phone||phone.trim()===''){alert('Este cliente no tiene número de teléfono registrado');return;}let cleanPhone=phone.replace(/\s+/g,'').replace(/[-()]/g,'');if(!cleanPhone.startsWith('+51')&&!cleanPhone.startsWith('51')){cleanPhone='+51'+cleanPhone;}else if(cleanPhone.startsWith('51')&&!cleanPhone.startsWith('+51')){cleanPhone='+'+cleanPhone;}const whatsappUrl=`https://wa.me/${cleanPhone.replace('+','')}`;window.open(whatsappUrl,'_blank');}
 function makeCall(phone){if(!phone||phone.trim()===''){alert('Este cliente no tiene número de teléfono registrado');return;}let cleanPhone=phone.replace(/\s+/g,'').replace(/[-()]/g,'');if(!cleanPhone.startsWith('+51')&&!cleanPhone.startsWith('51')){cleanPhone='+51'+cleanPhone;}else if(cleanPhone.startsWith('51')&&!cleanPhone.startsWith('+51')){cleanPhone='+'+cleanPhone;}const callUrl=`tel:${cleanPhone}`;window.location.href=callUrl;}
-function formatExcelDate(excelDate){
-  if(!excelDate)return'';
-  
-  // Si ya está en formato ISO (YYYY-MM-DD)
-  if(typeof excelDate==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(excelDate)){
-    return excelDate;
-  }
-  
-  if(typeof excelDate==='string'){
-    // Limpiar espacios
-    excelDate=excelDate.trim();
-    
-    // Formato dd/mm/yyyy o dd-mm-yyyy
-    if(excelDate.includes('/')||excelDate.includes('-')){
-      const parts=excelDate.split(/[/-]/);
-      if(parts.length===3){
-        let day,month,year;
-        
-        // Si el primer elemento tiene 4 dígitos, es año (formato yyyy-mm-dd)
-        if(parts[0].length===4){
-          year=parts[0];
-          month=parts[1].padStart(2,'0');
-          day=parts[2].padStart(2,'0');
-        }else{
-          // Formato dd/mm/yyyy o dd-mm-yyyy
-          day=parts[0].padStart(2,'0');
-          month=parts[1].padStart(2,'0');
-          year=parts[2].length===2?'20'+parts[2]:parts[2];
-        }
-        
-        // Validar que sea una fecha válida
-        const dateObj=new Date(parseInt(year),parseInt(month)-1,parseInt(day));
-        if(!isNaN(dateObj.getTime())){
-          return`${year}-${month}-${day}`;
-        }
-      }
-    }
-    return'';
-  }else if(typeof excelDate==='number'){
-    // Número serial de Excel
-    const utcDays=Math.floor(excelDate-25569);
-    const utcValue=utcDays*86400;
-    const dateInfo=new Date(utcValue*1000);
-    
-    // Validar que la fecha sea razonable (entre 2020 y 2030)
-    const year=dateInfo.getUTCFullYear();
-    if(year<2020||year>2030){
-      console.warn('Fecha fuera de rango:',year);
-      return'';
-    }
-    
-    const month=(dateInfo.getUTCMonth()+1).toString().padStart(2,'0');
-    const day=dateInfo.getUTCDate().toString().padStart(2,'0');
-    return`${year}-${month}-${day}`;
-  }
-  return'';
-}
-function mapFrequency(freq){
-  if(!freq)return'';
-  const upperFreq=freq.toUpperCase().trim();
-  
-  // Mapeos de abreviaturas del Excel
-  if(upperFreq==='DIAR')return'DIARIO';
-  if(upperFreq==='SEMA')return'SEMANAL';
-  if(upperFreq==='QUIN')return'QUINCENAL';
-  if(upperFreq==='MENS')return'MENSUAL';
-  
-  // Mapeos exactos completos
-  if(upperFreq==='DIARIO'||upperFreq==='DIARIA')return'DIARIO';
-  if(upperFreq==='SEMANAL')return'SEMANAL';
-  if(upperFreq==='QUINCENAL')return'QUINCENAL';
-  if(upperFreq==='MENSUAL')return'MENSUAL';
-  
-  // Mapeos parciales (por si acaso)
-  if(upperFreq.includes('DIAR'))return'DIARIO';
-  if(upperFreq.includes('SEMA'))return'SEMANAL';
-  if(upperFreq.includes('QUIN'))return'QUINCENAL';
-  if(upperFreq.includes('MENS'))return'MENSUAL';
-  
-  // Abreviaciones de una letra
-  if(upperFreq==='D')return'DIARIO';
-  if(upperFreq==='S')return'SEMANAL';
-  if(upperFreq==='Q')return'QUINCENAL';
-  if(upperFreq==='M')return'MENSUAL';
-  
-  console.warn('Frecuencia no reconocida:',freq);
-  return'';
-}
-function handleExcelUpload(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){try{const data=new Uint8Array(e.target.result);const workbook=XLSX.read(data,{type:'array',cellDates:true,dateNF:'dd/mm/yyyy'});const firstSheet=workbook.Sheets[workbook.SheetNames[0]];const jsonData=XLSX.utils.sheet_to_json(firstSheet,{header:1,raw:false,dateNF:'dd/mm/yyyy'});if(jsonData.length<2){alert('El archivo Excel está vacío o no tiene el formato correcto');return;}const headers=jsonData[0];console.log('Headers encontrados:',headers);let updatedCount=0;let addedCount=0;let errorCount=0;const errors=[];for(let i=1;i<jsonData.length;i++){const row=jsonData[i];if(!row[0]||!row[1])continue;try{const id=row[0].toString().trim();const name=row[1].toString().trim();const phone=row[2]?row[2].toString().trim():'';const disbursementDate=row[3]?formatExcelDate(row[3]):'';const term=row[4]?parseInt(row[4]):0;const frequency=row[5]?mapFrequency(row[5].toString().trim()):'';const quota=row[6]?parseFloat(row[6]):0;// Validar datos requeridos
-if(!disbursementDate){errors.push(`Fila ${i+1}: Fecha de desembolso inválida para ${name}`);errorCount++;continue;}
-if(!term||term<=0){errors.push(`Fila ${i+1}: Plazo inválido para ${name}`);errorCount++;continue;}
-if(!frequency){errors.push(`Fila ${i+1}: Frecuencia inválida para ${name}`);errorCount++;continue;}
-if(!quota||quota<=0){errors.push(`Fila ${i+1}: Monto de cuota inválido para ${name}`);errorCount++;continue;}const existingClient=clients.find(c=>c.id===id);if(existingClient){existingClient.name=name;existingClient.phone=phone;existingClient.disbursementDate=disbursementDate;existingClient.term=term;existingClient.frequency=frequency;existingClient.quota=quota;updatedCount++;console.log('Cliente actualizado:',existingClient);}else{const newClient={id:id,name:name,phone:phone,disbursementDate:disbursementDate,frequency:frequency,quota:quota,term:term,createdAt:getPeruvianISOString()};clients.push(newClient);addedCount++;console.log('Cliente agregado:',newClient);}}catch(err){errors.push(`Fila ${i+1}: Error al procesar - ${err.message}`);errorCount++;}}saveData();updateDisplay();let message=`Archivo procesado:\n- Clientes nuevos: ${addedCount}\n- Clientes actualizados: ${updatedCount}`;if(errorCount>0){message+=`\n- Errores: ${errorCount}\n\nDetalles de errores:\n${errors.slice(0,5).join('\n')}`;if(errors.length>5){message+=`\n... y ${errors.length-5} errores más`;}}alert(message);event.target.value='';}catch(error){alert('Error al procesar el archivo. Asegúrate de que sea un archivo Excel válido.\n\nError: '+error.message);console.error('Error completo:',error);event.target.value='';}};reader.readAsArrayBuffer(file);}
-const excelClients=[{id:"3524",name:"DE LA PUENTE FLORES, NANCY",phone:"990441351",disbursementDate:"2025-05-30",frequency:"DIARIO",quota:539.8,term:60},{id:"7495",name:"GAMARRA ACOSTA, NARCISO",phone:"915203130",disbursementDate:"2025-06-18",frequency:"SEMANAL",quota:270,term:4},{id:"7805",name:"RODRIGUEZ SEGURA, GENRI",phone:"937680754",disbursementDate:"2025-06-18",frequency:"SEMANAL",quota:463.4,term:6},{id:"19179",name:"BRAVO TRUJILLO, DELIA",phone:"965108551",disbursementDate:"2025-06-17",frequency:"SEMANAL",quota:540,term:4},{id:"22074",name:"PALABACINO BRANDAN, JULIANA",phone:"918893603",disbursementDate:"2025-05-30",frequency:"DIARIO",quota:25.7,term:30},{id:"22426",name:"ALVARADO VERDE, ARTURO PERCY",phone:"938134663",disbursementDate:"2024-11-29",frequency:"SEMANAL",quota:6709.4,term:4},{id:"22926",name:"ADAN ULPIANO, JUAN FILOMON",phone:"990004715",disbursementDate:"2024-12-03",frequency:"MENSUAL",quota:10500.77,term:1},{id:"23695",name:"AROSTEGUI MARTINEZ, JOSE FRANCISCO",phone:"940164878",disbursementDate:"2025-05-21",frequency:"SEMANAL",quota:540,term:4},{id:"23912",name:"RAMIREZ CHACALTANA, CESAR LUCIANO",phone:"992413952",disbursementDate:"2025-06-30",frequency:"DIARIO",quota:16,term:20},{id:"23976",name:"CAMPOS DEZA, DANIEL",phone:"956363967",disbursementDate:"2025-06-13",frequency:"SEMANAL",quota:2745,term:6},{id:"24297",name:"HERRERA PRESENTACION, PERCY JONATHAN",phone:"943298683",disbursementDate:"2025-06-20",frequency:"MENSUAL",quota:582.2,term:6},{id:"24390",name:"GARIBAY ALVARADO, MIROSLAVA",phone:"943694037",disbursementDate:"2025-06-25",frequency:"SEMANAL",quota:546.7,term:5},{id:"24437",name:"NAVARRETE RAMOS, MARIA ELENA",phone:"993619795",disbursementDate:"2025-06-11",frequency:"DIARIO",quota:85.2,term:25},{id:"24929",name:"TARAZONA SALVADOR, SAMANTHA KORAIMA",phone:"935220939",disbursementDate:"2025-06-18",frequency:"DIARIO",quota:36,term:30},{id:"24983",name:"ORTEGA PONTE, JULIANA KAROLL",phone:"935313986",disbursementDate:"2025-06-13",frequency:"SEMANAL",quota:270,term:4},{id:"25030",name:"ROSALES HUAYNATE, YOLY JUDITH",phone:"927618853",disbursementDate:"2025-07-02",frequency:"SEMANAL",quota:324,term:4},{id:"25060",name:"CENEPO AROSTEGUI, LOURDES",phone:"935530927",disbursementDate:"2025-05-28",frequency:"DIARIO",quota:72.1,term:30},{id:"25086",name:"VERAMENDI VARGAS DE DAVILA, ANGELA LEYDI",phone:"934363562",disbursementDate:"2025-06-30",frequency:"SEMANAL",quota:1974,term:4},{id:"25132",name:"MARQUEZ FLORES, JOHAN ANTONNY",phone:"989851759",disbursementDate:"2025-05-30",frequency:"SEMANAL",quota:4100,term:8},{id:"25159",name:"PINEDO PUTPAÑA, PATRICIA ALFONSA",phone:"961690993",disbursementDate:"2025-06-16",frequency:"DIARIO",quota:63.3,term:20},{id:"25236",name:"UPIACHIHUA PEÑA, RICHARD ALBERTO",phone:"917955821",disbursementDate:"2025-06-13",frequency:"DIARIO",quota:79.2,term:20},{id:"25295",name:"ROMERO BERAUN, DORA",phone:"921090751",disbursementDate:"2025-06-20",frequency:"DIARIO",quota:52.8,term:20},{id:"25310",name:"RIVERA BRAVO, LIZ MARLENE",phone:"971953669",disbursementDate:"2025-06-20",frequency:"DIARIO",quota:52.8,term:20},{id:"25325",name:"RODRIGUEZ SANGAMA, EDWIN",phone:"989956833",disbursementDate:"2025-06-18",frequency:"SEMANAL",quota:270,term:4},{id:"18636",name:"HIJAR REATEGUI, JHONEL ROY",phone:"928894109",disbursementDate:"2024-12-03",frequency:"MENSUAL",quota:8826.38,term:1},{id:"12640",name:"GRIFO INVERSIONES GARCIA SOCIEDAD COMERCIAL DE RESPONSABILIDAD LIMITADA",phone:"953268928",disbursementDate:"2025-04-16",frequency:"QUINCENAL",quota:4725,term:8}];
+function formatExcelDate(excelDate){if(!excelDate)return'';if(typeof excelDate==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(excelDate)){return excelDate;}if(typeof excelDate==='string'){excelDate=excelDate.trim();if(excelDate.includes('/')||excelDate.includes('-')){const parts=excelDate.split(/[/-]/);if(parts.length===3){let day,month,year;if(parts[0].length===4){year=parts[0];month=parts[1].padStart(2,'0');day=parts[2].padStart(2,'0');}else{day=parts[0].padStart(2,'0');month=parts[1].padStart(2,'0');year=parts[2].length===2?'20'+parts[2]:parts[2];}const dateObj=new Date(parseInt(year),parseInt(month)-1,parseInt(day));if(!isNaN(dateObj.getTime())){return`${year}-${month}-${day}`;}}}}else if(typeof excelDate==='number'){const utcDays=Math.floor(excelDate-25569);const utcValue=utcDays*86400;const dateInfo=new Date(utcValue*1000);const year=dateInfo.getUTCFullYear();if(year<2020||year>2030){console.warn('Fecha fuera de rango:',year);return'';}const month=(dateInfo.getUTCMonth()+1).toString().padStart(2,'0');const day=dateInfo.getUTCDate().toString().padStart(2,'0');return`${year}-${month}-${day}`;}return'';}
+function parseExcelNumber(value){if(typeof value==='number')return value;if(typeof value==='string'){value=value.trim();value=value.replace(/,/g,'.');value=value.replace(/[^\d.-]/g,'');return parseFloat(value)||0;}return 0;}
+function mapFrequency(freq){if(!freq)return'';const upperFreq=freq.toUpperCase().trim();if(upperFreq==='DIAR')return'DIARIO';if(upperFreq==='SEMA')return'SEMANAL';if(upperFreq==='QUIN')return'QUINCENAL';if(upperFreq==='MENS')return'MENSUAL';if(upperFreq==='DIARIO'||upperFreq==='DIARIA')return'DIARIO';if(upperFreq==='SEMANAL')return'SEMANAL';if(upperFreq==='QUINCENAL')return'QUINCENAL';if(upperFreq==='MENSUAL')return'MENSUAL';if(upperFreq.includes('DIAR'))return'DIARIO';if(upperFreq.includes('SEMA'))return'SEMANAL';if(upperFreq.includes('QUIN'))return'QUINCENAL';if(upperFreq.includes('MENS'))return'MENSUAL';if(upperFreq==='D')return'DIARIO';if(upperFreq==='S')return'SEMANAL';if(upperFreq==='Q')return'QUINCENAL';if(upperFreq==='M')return'MENSUAL';console.warn('Frecuencia no reconocida:',freq);return'';}
+function handleExcelUpload(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){try{const data=new Uint8Array(e.target.result);const workbook=XLSX.read(data,{type:'array',cellDates:true,dateNF:'dd/mm/yyyy',raw:false});const firstSheet=workbook.Sheets[workbook.SheetNames[0]];const jsonData=XLSX.utils.sheet_to_json(firstSheet,{header:1,raw:false,dateNF:'dd/mm/yyyy'});if(jsonData.length<2){alert('El archivo Excel está vacío o no tiene el formato correcto');return;}const headers=jsonData[0];console.log('Headers encontrados:',headers);let updatedCount=0;let addedCount=0;let errorCount=0;const errors=[];for(let i=1;i<jsonData.length;i++){const row=jsonData[i];if(!row[0]||!row[1])continue;try{const id=row[0].toString().trim();const name=row[1].toString().trim();const phone=row[2]?row[2].toString().trim():'';const disbursementDate=row[3]?formatExcelDate(row[3]):'';const term=row[4]?parseInt(row[4]):0;const frequency=row[5]?mapFrequency(row[5].toString().trim()):'';const quota=row[6]?parseExcelNumber(row[6]):0;if(!disbursementDate){errors.push(`Fila ${i+1}: Fecha de desembolso inválida para ${name}`);errorCount++;continue;}if(!term||term<=0){errors.push(`Fila ${i+1}: Plazo inválido para ${name}`);errorCount++;continue;}if(!frequency){errors.push(`Fila ${i+1}: Frecuencia inválida para ${name}`);errorCount++;continue;}if(!quota||quota<=0){errors.push(`Fila ${i+1}: Monto de cuota inválido para ${name}`);errorCount++;continue;}const existingClient=clients.find(c=>c.id===id);if(existingClient){existingClient.name=name;existingClient.phone=phone;existingClient.disbursementDate=disbursementDate;existingClient.term=term;existingClient.frequency=frequency;existingClient.quota=quota;updatedCount++;console.log('Cliente actualizado:',existingClient);}else{const newClient={id:id,name:name,phone:phone,disbursementDate:disbursementDate,frequency:frequency,quota:quota,term:term,createdAt:getPeruvianISOString()};clients.push(newClient);addedCount++;console.log('Cliente agregado:',newClient);}}catch(err){errors.push(`Fila ${i+1}: Error al procesar - ${err.message}`);errorCount++;}}saveData();updateDisplay();let message=`Archivo procesado:\n- Clientes nuevos: ${addedCount}\n- Clientes actualizados: ${updatedCount}`;if(errorCount>0){message+=`\n- Errores: ${errorCount}\n\nDetalles de errores:\n${errors.slice(0,5).join('\n')}`;if(errors.length>5){message+=`\n... y ${errors.length-5} errores más`;}}alert(message);event.target.value='';}catch(error){alert('Error al procesar el archivo. Asegúrate de que sea un archivo Excel válido.\n\nError: '+error.message);console.error('Error completo:',error);event.target.value='';}};reader.readAsArrayBuffer(file);}
+const excelClients=[{id:"3524",name:"DE LA PUENTE FLORES, NANCY",phone:"990441351",disbursementDate:"2025-05-30",frequency:"DIARIO",quota:539.8,term:60},{id:"7495",name:"GAMARRA ACOSTA, NARCISO",phone:"915203130",disbursementDate:"2025-06-18",frequency:"SEMANAL",quota:270,term:4},{id:"7805",name:"RODRIGUEZ SEGURA, GENRI",phone:"937680754",disbursementDate:"2025-06-18",frequency:"SEMANAL",quota:463.4,term:6},{id:"19179",name:"BRAVO TRUJILLO, DELIA",phone:"965108551",disbursementDate:"2025-07-10",frequency:"SEMANAL",quota:540,term:4},{id:"22074",name:"PALABACINO BRANDAN, JULIANA",phone:"918893603",disbursementDate:"2025-05-30",frequency:"DIARIO",quota:25.7,term:30},{id:"22426",name:"ALVARADO VERDE, ARTURO PERCY",phone:"938134663",disbursementDate:"2024-11-29",frequency:"SEMANAL",quota:6709.4,term:4},{id:"22926",name:"ADAN ULPIANO, JUAN FILOMON",phone:"990004715",disbursementDate:"2024-12-03",frequency:"MENSUAL",quota:10500.77,term:1},{id:"23695",name:"AROSTEGUI MARTINEZ, JOSE FRANCISCO",phone:"940164878",disbursementDate:"2025-05-21",frequency:"SEMANAL",quota:540,term:4},{id:"23912",name:"RAMIREZ CHACALTANA, CESAR LUCIANO",phone:"992413952",disbursementDate:"2025-07-09",frequency:"DIARIO",quota:42.6,term:25},{id:"23976",name:"CAMPOS DEZA, DANIEL",phone:"956363967",disbursementDate:"2025-06-13",frequency:"SEMANAL",quota:2745,term:6},{id:"24297",name:"HERRERA PRESENTACION, PERCY JONATHAN",phone:"943298683",disbursementDate:"2025-06-20",frequency:"MENSUAL",quota:582.2,term:6},{id:"24390",name:"GARIBAY ALVARADO, MIROSLAVA",phone:"943694037",disbursementDate:"2025-06-25",frequency:"SEMANAL",quota:546.7,term:5},{id:"24437",name:"NAVARRETE RAMOS, MARIA ELENA",phone:"993619795",disbursementDate:"2025-06-11",frequency:"DIARIO",quota:85.2,term:25},{id:"24929",name:"TARAZONA SALVADOR, SAMANTHA KORAIMA",phone:"935220939",disbursementDate:"2025-06-18",frequency:"DIARIO",quota:36,term:30},{id:"24967",name:"ORTEGA PONTE, JULIANA KAROLL",phone:"935313986",disbursementDate:"2025-06-20",frequency:"SEMANAL",quota:437.4,term:4},{id:"25030",name:"ROSALES HUAYNATE, YOLY JUDITH",phone:"927618853",disbursementDate:"2025-07-02",frequency:"SEMANAL",quota:324,term:4},{id:"25060",name:"CENEPO AROSTEGUI, LOURDES",phone:"935530927",disbursementDate:"2025-05-28",frequency:"DIARIO",quota:72.1,term:30},{id:"25086",name:"VERAMENDI VARGAS DE DAVILA, ANGELA LEYDI",phone:"934363562",disbursementDate:"2025-06-30",frequency:"SEMANAL",quota:1974,term:4},{id:"25132",name:"MARQUEZ FLORES, JOHAN ANTONNY",phone:"989851759",disbursementDate:"2025-05-30",frequency:"SEMANAL",quota:4100,term:8},{id:"25159",name:"PINEDO PUTPAÑA, PATRICIA ALFONSA",phone:"961690993",disbursementDate:"2025-06-16",frequency:"DIARIO",quota:63.3,term:20},{id:"25236",name:"UPIACHIHUA PEÑA, RICHARD ALBERTO",phone:"917955821",disbursementDate:"2025-06-14",frequency:"DIARIO",quota:63.3,term:20},{id:"25295",name:"ROMERO BERAUN, DORA",phone:"921090751",disbursementDate:"2025-06-20",frequency:"DIARIO",quota:52.8,term:20},{id:"25310",name:"RIVERA BRAVO, LIZ MARLENE",phone:"971953669",disbursementDate:"2025-06-20",frequency:"DIARIO",quota:52.8,term:20},{id:"25325",name:"RODRIGUEZ SANGAMA, EDWIN",phone:"989956833",disbursementDate:"2025-06-18",frequency:"SEMANAL",quota:270,term:4},{id:"18636",name:"HIJAR REATEGUI, JHONEL ROY",phone:"928894109",disbursementDate:"2024-12-03",frequency:"MENSUAL",quota:8826.38,term:1},{id:"12640",name:"GRIFO INVERSIONES GARCIA SOCIEDAD COMERCIAL DE RESPONSABILIDAD LIMITADA",phone:"953268928",disbursementDate:"2025-04-16",frequency:"QUINCENAL",quota:4725,term:8}];
 function init(){loadData();importExcelClients();setToday();updateDisplay();document.addEventListener('click',function(e){if(!e.target.closest('.form-group')){hideClientDropdown();}});}
-function importExcelClients(){localStorage.removeItem('excelClientsImported');localStorage.removeItem('excelClientsImported_v2');localStorage.removeItem('excelClientsImported_v3');localStorage.removeItem('excelClientsImported_v4');localStorage.removeItem('excelClientsImported_v5');localStorage.removeItem('excelClientsImported_v6');const savedImport=localStorage.getItem('excelClientsImported_v7');if(!savedImport){excelClients.forEach(excelClient=>{const existingClient=clients.find(c=>c.id===excelClient.id);if(existingClient){existingClient.quota=excelClient.quota;existingClient.term=excelClient.term;existingClient.disbursementDate=excelClient.disbursementDate;existingClient.frequency=excelClient.frequency;existingClient.phone=excelClient.phone;existingClient.name=excelClient.name;}else{clients.push({id:excelClient.id,name:excelClient.name,phone:excelClient.phone,disbursementDate:excelClient.disbursementDate,frequency:excelClient.frequency,quota:excelClient.quota,term:excelClient.term,createdAt:getPeruvianISOString()});}});localStorage.setItem('excelClientsImported_v7','true');saveData();}}
+function importExcelClients(){localStorage.removeItem('excelClientsImported');localStorage.removeItem('excelClientsImported_v2');localStorage.removeItem('excelClientsImported_v3');localStorage.removeItem('excelClientsImported_v4');localStorage.removeItem('excelClientsImported_v5');localStorage.removeItem('excelClientsImported_v6');localStorage.removeItem('excelClientsImported_v7');const savedImport=localStorage.getItem('excelClientsImported_v8');if(!savedImport){excelClients.forEach(excelClient=>{const existingClient=clients.find(c=>c.id===excelClient.id);if(existingClient){existingClient.quota=excelClient.quota;existingClient.term=excelClient.term;existingClient.disbursementDate=excelClient.disbursementDate;existingClient.frequency=excelClient.frequency;existingClient.phone=excelClient.phone;existingClient.name=excelClient.name;}else{clients.push({id:excelClient.id,name:excelClient.name,phone:excelClient.phone,disbursementDate:excelClient.disbursementDate,frequency:excelClient.frequency,quota:excelClient.quota,term:excelClient.term,createdAt:getPeruvianISOString()});}});localStorage.setItem('excelClientsImported_v8','true');saveData();}}
 function searchAllClients(){const searchTerm=document.getElementById('generalClientSearch').value.toLowerCase();const resultsContainer=document.getElementById('searchResults');if(searchTerm===''){resultsContainer.style.display='none';return;}const filteredClients=clients.filter(client=>client.name.toLowerCase().includes(searchTerm)||client.id.includes(searchTerm)||(client.phone&&client.phone.includes(searchTerm)));resultsContainer.style.display='block';if(filteredClients.length===0){resultsContainer.innerHTML='<div class="no-results">No se encontraron clientes</div>';}else{resultsContainer.innerHTML=filteredClients.map(client=>`<div class="search-result-item" onclick="showClientDetailsModal('${client.id}')"><div style="font-size:11px;color:#999;">ID:${client.id}</div><div style="font-weight:600;">${client.name}</div>${client.phone?`<div style="font-size:13px;color:#666;">${client.phone}</div>`:''}</div>`).join('');}}
 function showClientDetailsModal(clientId){const client=clients.find(c=>c.id===clientId);if(!client)return;const today=getPeruvianDate();const nextPaymentInfo=getNextPaymentDate(client);const clientPayments=payments.filter(p=>p.clientId===clientId);const totalPaid=clientPayments.reduce((sum,p)=>sum+p.amount,0);const content=document.getElementById('clientDetailsContent');content.innerHTML=`<div class="client-detail-info"><div class="detail-row"><span class="detail-label">ID:</span><span class="detail-value">${client.id}</span></div><div class="detail-row"><span class="detail-label">Nombre:</span><span class="detail-value">${client.name}</span></div><div class="detail-row"><span class="detail-label">Teléfono:</span><span class="detail-value">${client.phone||'No registrado'}</span></div><div class="detail-row"><span class="detail-label">Fecha de desembolso:</span><span class="detail-value">${client.disbursementDate?formatPeruvianDate(client.disbursementDate):'N/A'}</span></div><div class="detail-row"><span class="detail-label">Frecuencia:</span><span class="detail-value">${client.frequency||'N/A'}</span></div><div class="detail-row"><span class="detail-label">Cuota:</span><span class="detail-value" style="color:#1a5490;">S/${client.quota?client.quota.toFixed(2):'0.00'}</span></div><div class="detail-row"><span class="detail-label">Plazo:</span><span class="detail-value">${client.term||'N/A'} cuotas</span></div><div class="detail-row"><span class="detail-label">Próximo pago:</span><span class="detail-value">${nextPaymentInfo}</span></div><div class="detail-row"><span class="detail-label">Total pagado:</span><span class="detail-value" style="color:#28a745;">S/${totalPaid.toFixed(2)}</span></div><div class="detail-row"><span class="detail-label">Número de pagos:</span><span class="detail-value">${clientPayments.length}</span></div></div><div class="action-buttons"><button class="btn-action btn-schedule" onclick="showPaymentSchedule('${client.id}')">📅 Crono</button>${client.phone?`<button class="btn-action btn-call" onclick="makeCall('${client.phone}')">📞 Llamar</button><button class="btn-action btn-whatsapp" onclick="openWhatsApp('${client.phone}')">📱 WhatsApp</button>`:''}<button class="btn-action btn-edit-client" onclick="showEditClientModal('${client.id}');closeModal('clientDetailsModal');">✏️ Modificar</button><button class="btn-action btn-delete-client" onclick="deleteClientFromDetails('${client.id}')">🗑️ Eliminar</button></div>`;showModal('clientDetailsModal');}
 function deleteClientFromDetails(clientId){if(confirm('¿Estás seguro de eliminar este cliente? Se mantendrán los pagos históricos.')){clients=clients.filter(c=>c.id!==clientId);saveData();updateDisplay();closeModal('clientDetailsModal');}}
 function getNextPaymentDate(client){if(!client.disbursementDate){return'N/A';}const today=getPeruvianDateString();const todayParts=today.split('-');const todayDate=new Date(parseInt(todayParts[0]),parseInt(todayParts[1])-1,parseInt(todayParts[2]));for(let i=1;i<=60;i++){const checkDate=new Date(todayDate);checkDate.setDate(checkDate.getDate()+i);const checkDateStr=`${checkDate.getFullYear()}-${String(checkDate.getMonth()+1).padStart(2,'0')}-${String(checkDate.getDate()).padStart(2,'0')}`;if(shouldPayOnDate(client,checkDateStr)){return`${String(checkDate.getDate()).padStart(2,'0')}/${String(checkDate.getMonth()+1).padStart(2,'0')}/${checkDate.getFullYear()}`;}}return'N/A';}
-function shouldPayOnDate(client,checkDate){
-  if(!client.disbursementDate||!client.frequency){
-    return false;
-  }
-  
-  const[disbYear,disbMonth,disbDay]=client.disbursementDate.split('-').map(n=>parseInt(n));
-  const[checkYear,checkMonth,checkDay]=checkDate.split('-').map(n=>parseInt(n));
-  
-  // Validar que las partes de la fecha sean números válidos
-  if(isNaN(disbYear)||isNaN(disbMonth)||isNaN(disbDay)||
-     isNaN(checkYear)||isNaN(checkMonth)||isNaN(checkDay)){
-    console.warn('Fecha inválida en shouldPayOnDate:',client.disbursementDate,checkDate);
-    return false;
-  }
-  
-  const disbursementDate=new Date(disbYear,disbMonth-1,disbDay);
-  const targetDate=new Date(checkYear,checkMonth-1,checkDay);
-  
-  if(targetDate<=disbursementDate){
-    return false;
-  }
-  
-  const daysDiff=Math.floor((targetDate-disbursementDate)/(1000*60*60*24));
-  const dayOfWeek=targetDate.getDay();
-  
-  switch(client.frequency){
-    case'DIARIO':
-      // Paga de lunes a viernes, excepto el primer día
-      return dayOfWeek>=1&&dayOfWeek<=5&&daysDiff>=1;
-      
-    case'SEMANAL':
-      // Paga cada 7 días
-      return daysDiff>0&&daysDiff%7===0;
-      
-    case'QUINCENAL':
-      // Paga cada 15 días
-      return daysDiff>0&&daysDiff%15===0;
-      
-    case'MENSUAL':
-      // Manejo especial para pagos mensuales
-      if(daysDiff<28)return false;
-      
-      const monthsDiff=(checkYear-disbYear)*12+(checkMonth-disbMonth);
-      if(monthsDiff<1)return false;
-      
-      // Opción 1: Mismo día del mes
-      if(checkDay===disbDay){
-        return true;
-      }
-      
-      // Opción 2: Último día del mes si el día de desembolso no existe
-      const lastDayOfTargetMonth=new Date(checkYear,checkMonth,0).getDate();
-      if(checkDay===lastDayOfTargetMonth&&disbDay>lastDayOfTargetMonth){
-        return true;
-      }
-      
-      // Opción 3: Para meses con menos días, permitir el día más cercano
-      if(disbDay>28&&checkDay===lastDayOfTargetMonth){
-        return true;
-      }
-      
-      return false;
-      
-    default:
-      console.warn('Frecuencia no reconocida:',client.frequency);
-      return false;
-  }
-}
+function shouldPayOnDate(client,checkDate){if(!client.disbursementDate||!client.frequency){return false;}const[disbYear,disbMonth,disbDay]=client.disbursementDate.split('-').map(n=>parseInt(n));const[checkYear,checkMonth,checkDay]=checkDate.split('-').map(n=>parseInt(n));if(isNaN(disbYear)||isNaN(disbMonth)||isNaN(disbDay)||isNaN(checkYear)||isNaN(checkMonth)||isNaN(checkDay)){console.warn('Fecha inválida en shouldPayOnDate:',client.disbursementDate,checkDate);return false;}const disbursementDate=new Date(disbYear,disbMonth-1,disbDay);const targetDate=new Date(checkYear,checkMonth-1,checkDay);if(targetDate<=disbursementDate){return false;}const daysDiff=Math.floor((targetDate-disbursementDate)/(1000*60*60*24));const dayOfWeek=targetDate.getDay();switch(client.frequency){case'DIARIO':return dayOfWeek>=1&&dayOfWeek<=5&&daysDiff>=1;case'SEMANAL':return daysDiff>0&&daysDiff%7===0;case'QUINCENAL':return daysDiff>0&&daysDiff%15===0;case'MENSUAL':if(daysDiff<28)return false;const monthsDiff=(checkYear-disbYear)*12+(checkMonth-disbMonth);if(monthsDiff<1)return false;if(checkDay===disbDay){return true;}const lastDayOfTargetMonth=new Date(checkYear,checkMonth,0).getDate();if(checkDay===lastDayOfTargetMonth&&disbDay>lastDayOfTargetMonth){return true;}if(disbDay>28&&checkDay===lastDayOfTargetMonth){return true;}return false;default:console.warn('Frecuencia no reconocida:',client.frequency);return false;}}
 function loadData(){const savedClients=localStorage.getItem('clients');const savedPayments=localStorage.getItem('payments');if(savedClients)clients=JSON.parse(savedClients);if(savedPayments)payments=JSON.parse(savedPayments);}
 function saveData(){localStorage.setItem('clients',JSON.stringify(clients));localStorage.setItem('payments',JSON.stringify(payments));}
 function setToday(){const today=getPeruvianDateString();document.getElementById('dateFilter').value=today;updateDisplay();}
@@ -351,113 +75,15 @@ document.getElementById('dateFilter').addEventListener('change',updateDisplay);
 window.onclick=function(event){if(event.target.classList.contains('modal')){const modalId=event.target.id;closeModal(modalId);}}
 document.addEventListener('touchstart',function(e){if(e.touches.length>1){e.preventDefault();}});
 if(window.navigator.standalone){document.addEventListener('click',function(e){if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT'){e.target.focus();}});}
-function showPaymentSchedule(clientId){const client=clients.find(c=>c.id===clientId);if(!client){alert('Cliente no encontrado');return;}
-// Validar datos requeridos con mensajes específicos
-if(!client.disbursementDate){alert('Este cliente no tiene fecha de desembolso registrada. Por favor, edita el cliente y agrega esta información.');return;}
-if(!client.term||client.term<=0){alert('Este cliente no tiene un plazo válido registrado. Por favor, edita el cliente y agrega esta información.');return;}
-if(!client.frequency){alert('Este cliente no tiene frecuencia de pago registrada. Por favor, edita el cliente y agrega esta información.');return;}
-if(!client.quota||client.quota<=0){alert('Este cliente no tiene monto de cuota válido. Por favor, edita el cliente y agrega esta información.');return;}console.log('Generando cronograma para:',client);const clientPayments=payments.filter(p=>p.clientId===clientId);const paymentDates=[];const[year,month,day]=client.disbursementDate.split('-').map(n=>parseInt(n));const startDate=new Date(year,month-1,day);// Validar que la fecha sea válida
-if(isNaN(startDate.getTime())){alert('La fecha de desembolso del cliente no es válida. Por favor, verifica los datos.');return;}let currentDate=new Date(startDate);let paymentCount=0;const maxDays=client.frequency==='MENSUAL'?client.term*31:365;while(paymentCount<client.term&&currentDate<=new Date(startDate.getTime()+(maxDays*24*60*60*1000))){const dateStr=`${currentDate.getFullYear()}-${String(currentDate.getMonth()+1).padStart(2,'0')}-${String(currentDate.getDate()).padStart(2,'0')}`;if(shouldPayOnDate(client,dateStr)){paymentDates.push(new Date(currentDate));paymentCount++;}currentDate.setDate(currentDate.getDate()+1);}if(paymentDates.length===0){alert('No se pudo generar el cronograma. Verifica que la frecuencia y fecha de desembolso sean correctas.');return;}let scheduleHTML=`<div style="margin-bottom:20px;"><h4 style="margin:0;">Cliente:${client.name}</h4><p style="margin:5px 0;color:#666;">ID:${client.id}</p><p style="margin:5px 0;color:#666;">Frecuencia:${client.frequency} | Plazo:${client.term} cuotas</p></div><table class="schedule-table"><thead><tr><th>N°</th><th>Fecha</th><th>Monto</th><th>Estado</th><th>Pagado</th></tr></thead><tbody>`;const today=getPeruvianDateString();let totalPagado=0;paymentDates.forEach((date,index)=>{const dateStr=date.toISOString().split('T')[0];const formattedDate=formatPeruvianDate(dateStr);const paymentsOnDate=clientPayments.filter(p=>p.date===dateStr);const amountPaid=paymentsOnDate.reduce((sum,p)=>sum+p.amount,0);totalPagado+=amountPaid;let status='';let statusClass='';if(paymentsOnDate.length>0){status='Pagado';statusClass='paid';}else if(dateStr<today){status='Vencido';statusClass='pending';}else if(dateStr===today){status='Hoy';statusClass='pending';}else{status='Pendiente';statusClass='future';}scheduleHTML+=`<tr class="${statusClass}"><td>${index+1}</td><td>${formattedDate}</td><td>S/${client.quota.toFixed(2)}</td><td>${status}</td><td>${amountPaid>0?`S/${amountPaid.toFixed(2)}`:'-'}</td></tr>`;});const totalEsperado=client.quota*client.term;const saldoPendiente=totalEsperado-totalPagado;scheduleHTML+=`</tbody></table><div style="margin-top:20px;padding:15px;background:#f8f9fa;border-radius:8px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><strong>Total esperado:</strong><span>S/${totalEsperado.toFixed(2)}</span></div><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><strong>Total pagado:</strong><span style="color:#28a745;">S/${totalPagado.toFixed(2)}</span></div><div style="display:flex;justify-content:space-between;"><strong>Saldo pendiente:</strong><span style="color:#dc3545;">S/${saldoPendiente.toFixed(2)}</span></div></div>`;document.getElementById('scheduleModalContent').innerHTML=scheduleHTML;showModal('scheduleModal');}
+function showPaymentSchedule(clientId){const client=clients.find(c=>c.id===clientId);if(!client){alert('Cliente no encontrado');return;}if(!client.disbursementDate){alert('Este cliente no tiene fecha de desembolso registrada. Por favor, edita el cliente y agrega esta información.');return;}if(!client.term||client.term<=0){alert('Este cliente no tiene un plazo válido registrado. Por favor, edita el cliente y agrega esta información.');return;}if(!client.frequency){alert('Este cliente no tiene frecuencia de pago registrada. Por favor, edita el cliente y agrega esta información.');return;}if(!client.quota||client.quota<=0){alert('Este cliente no tiene monto de cuota válido. Por favor, edita el cliente y agrega esta información.');return;}console.log('Generando cronograma para:',client);const clientPayments=payments.filter(p=>p.clientId===clientId);const paymentDates=[];const[year,month,day]=client.disbursementDate.split('-').map(n=>parseInt(n));const startDate=new Date(year,month-1,day);if(isNaN(startDate.getTime())){alert('La fecha de desembolso del cliente no es válida. Por favor, verifica los datos.');return;}let currentDate=new Date(startDate);let paymentCount=0;const maxDays=client.frequency==='MENSUAL'?client.term*31:365;while(paymentCount<client.term&&currentDate<=new Date(startDate.getTime()+(maxDays*24*60*60*1000))){const dateStr=`${currentDate.getFullYear()}-${String(currentDate.getMonth()+1).padStart(2,'0')}-${String(currentDate.getDate()).padStart(2,'0')}`;if(shouldPayOnDate(client,dateStr)){paymentDates.push(new Date(currentDate));paymentCount++;}currentDate.setDate(currentDate.getDate()+1);}if(paymentDates.length===0){alert('No se pudo generar el cronograma. Verifica que la frecuencia y fecha de desembolso sean correctas.');return;}let scheduleHTML=`<div style="margin-bottom:20px;"><h4 style="margin:0;">Cliente:${client.name}</h4><p style="margin:5px 0;color:#666;">ID:${client.id}</p><p style="margin:5px 0;color:#666;">Frecuencia:${client.frequency} | Plazo:${client.term} cuotas</p></div><table class="schedule-table"><thead><tr><th>N°</th><th>Fecha</th><th>Monto</th><th>Estado</th><th>Pagado</th></tr></thead><tbody>`;const today=getPeruvianDateString();let totalPagado=0;paymentDates.forEach((date,index)=>{const dateStr=date.toISOString().split('T')[0];const formattedDate=formatPeruvianDate(dateStr);const paymentsOnDate=clientPayments.filter(p=>p.date===dateStr);const amountPaid=paymentsOnDate.reduce((sum,p)=>sum+p.amount,0);totalPagado+=amountPaid;let status='';let statusClass='';if(paymentsOnDate.length>0){status='Pagado';statusClass='paid';}else if(dateStr<today){status='Vencido';statusClass='pending';}else if(dateStr===today){status='Hoy';statusClass='pending';}else{status='Pendiente';statusClass='future';}scheduleHTML+=`<tr class="${statusClass}"><td>${index+1}</td><td>${formattedDate}</td><td>S/${client.quota.toFixed(2)}</td><td>${status}</td><td>${amountPaid>0?`S/${amountPaid.toFixed(2)}`:'-'}</td></tr>`;});const totalEsperado=client.quota*client.term;const saldoPendiente=totalEsperado-totalPagado;scheduleHTML+=`</tbody></table><div style="margin-top:20px;padding:15px;background:#f8f9fa;border-radius:8px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><strong>Total esperado:</strong><span>S/${totalEsperado.toFixed(2)}</span></div><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><strong>Total pagado:</strong><span style="color:#28a745;">S/${totalPagado.toFixed(2)}</span></div><div style="display:flex;justify-content:space-between;"><strong>Saldo pendiente:</strong><span style="color:#dc3545;">S/${saldoPendiente.toFixed(2)}</span></div></div>`;document.getElementById('scheduleModalContent').innerHTML=scheduleHTML;showModal('scheduleModal');}
 function updateQuotas(){let updated=0;excelClients.forEach(excelClient=>{const existingClient=clients.find(c=>c.id===excelClient.id);if(existingClient&&(!existingClient.quota||existingClient.quota===0)){existingClient.quota=excelClient.quota;updated++;}});if(updated>0){saveData();updateDisplay();alert(`Se actualizaron las cuotas de ${updated} clientes`);}else{alert('Todos los clientes ya tienen sus cuotas actualizadas');}}
 function showEditClientModal(clientId){const client=clients.find(c=>c.id===clientId);if(!client)return;document.getElementById('editClientId').value=client.id;document.getElementById('editClientName').value=client.name;document.getElementById('editClientPhone').value=client.phone||'';document.getElementById('editClientDisbursementDate').value=client.disbursementDate||'';document.getElementById('editClientFrequency').value=client.frequency||'';document.getElementById('editClientQuota').value=client.quota||'';document.getElementById('editClientTerm').value=client.term||'';showModal('editClientModal');}
 function updateClient(event){event.preventDefault();const clientId=document.getElementById('editClientId').value;const client=clients.find(c=>c.id===clientId);if(!client)return;client.name=document.getElementById('editClientName').value.trim();client.phone=document.getElementById('editClientPhone').value.trim();client.disbursementDate=document.getElementById('editClientDisbursementDate').value;client.frequency=document.getElementById('editClientFrequency').value;client.quota=parseFloat(document.getElementById('editClientQuota').value);client.term=parseInt(document.getElementById('editClientTerm').value);saveData();updateDisplay();closeModal('editClientModal');alert('Cliente actualizado exitosamente');}
 function quickPayment(clientId){const client=clients.find(c=>c.id===clientId);if(!client)return;const date=document.getElementById('dateFilter').value;document.getElementById('clientSearchModal').value=client.name;document.getElementById('selectedClientId').value=client.id;document.getElementById('paymentAmountCash').value=client.quota||'';document.getElementById('paymentAmountYape').value='0';document.getElementById('paymentNote').value='Pago rápido';updatePaymentTotal();showModal('addPaymentModal');}
-// Función para corregir fechas mal formateadas
-function corregirFechas(){
-  let corregidas=0;
-  
-  clients.forEach(client=>{
-    if(client.disbursementDate){
-      const fechaOriginal=client.disbursementDate;
-      const fechaCorregida=formatExcelDate(fechaOriginal);
-      
-      if(fechaCorregida&&fechaCorregida!==fechaOriginal){
-        client.disbursementDate=fechaCorregida;
-        corregidas++;
-        console.log(`Corregida fecha de ${client.name}: ${fechaOriginal} -> ${fechaCorregida}`);
-      }
-    }
-  });
-  
-  if(corregidas>0){
-    saveData();
-    updateDisplay();
-    console.log(`✅ Se corrigieron ${corregidas} fechas`);
-  }else{
-    console.log('No se encontraron fechas para corregir');
-  }
-  
-  return corregidas;
-}
-
-// Hacer la función global
+function corregirFechas(){let corregidas=0;clients.forEach(client=>{if(client.disbursementDate){const fechaOriginal=client.disbursementDate;const fechaCorregida=formatExcelDate(fechaOriginal);if(fechaCorregida&&fechaCorregida!==fechaOriginal){client.disbursementDate=fechaCorregida;corregidas++;console.log(`Corregida fecha de ${client.name}: ${fechaOriginal} -> ${fechaCorregida}`);}}});if(corregidas>0){saveData();updateDisplay();console.log(`✅ Se corrigieron ${corregidas} fechas`);}else{console.log('No se encontraron fechas para corregir');}return corregidas;}
 window.corregirFechas=corregirFechas;
-
-// Función de diagnóstico para verificar datos de clientes
-function diagnosticarClientes(){
-  console.log('=== DIAGNÓSTICO DE CLIENTES ===');
-  console.log(`Total de clientes: ${clients.length}`);
-  
-  let problemCount=0;
-  const problems=[];
-  
-  clients.forEach(client=>{
-    const clientProblems=[];
-    
-    if(!client.id){
-      clientProblems.push('Sin ID');
-    }
-    if(!client.disbursementDate){
-      clientProblems.push('Sin fecha de desembolso');
-    }else{
-      // Validar formato de fecha
-      const dateParts=client.disbursementDate.split('-');
-      if(dateParts.length!==3||dateParts[0].length!==4){
-        clientProblems.push(`Fecha mal formateada: ${client.disbursementDate}`);
-      }
-    }
-    if(!client.frequency){
-      clientProblems.push('Sin frecuencia');
-    }else if(!['DIARIO','SEMANAL','QUINCENAL','MENSUAL'].includes(client.frequency)){
-      clientProblems.push(`Frecuencia inválida: ${client.frequency}`);
-    }
-    if(!client.quota||client.quota<=0){
-      clientProblems.push('Sin cuota o cuota inválida');
-    }
-    if(!client.term||client.term<=0){
-      clientProblems.push('Sin plazo o plazo inválido');
-    }
-    
-    if(clientProblems.length>0){
-      problemCount++;
-      problems.push({
-        client:client.name||'Sin nombre',
-        id:client.id||'Sin ID',
-        problems:clientProblems
-      });
-    }
-  });
-  
-  console.log(`Clientes con problemas: ${problemCount}`);
-  
-  if(problems.length>0){
-    console.log('\nDetalles de problemas:');
-    problems.forEach(p=>{
-      console.log(`\nCliente: ${p.client} (ID: ${p.id})`);
-      p.problems.forEach(problem=>{
-        console.log(`  - ${problem}`);
-      });
-    });
-  }else{
-    console.log('✅ Todos los clientes tienen datos completos');
-  }
-  
-  return{totalClients:clients.length,problemCount:problemCount,problems:problems};
-}
-
-// Hacer la función global para poder llamarla desde la consola
+function diagnosticarClientes(){console.log('=== DIAGNÓSTICO DE CLIENTES ===');console.log(`Total de clientes: ${clients.length}`);let problemCount=0;const problems=[];clients.forEach(client=>{const clientProblems=[];if(!client.id){clientProblems.push('Sin ID');}if(!client.disbursementDate){clientProblems.push('Sin fecha de desembolso');}else{const dateParts=client.disbursementDate.split('-');if(dateParts.length!==3||dateParts[0].length!==4){clientProblems.push(`Fecha mal formateada: ${client.disbursementDate}`);}}if(!client.frequency){clientProblems.push('Sin frecuencia');}else if(!['DIARIO','SEMANAL','QUINCENAL','MENSUAL'].includes(client.frequency)){clientProblems.push(`Frecuencia inválida: ${client.frequency}`);}if(!client.quota||client.quota<=0){clientProblems.push('Sin cuota o cuota inválida');}if(!client.term||client.term<=0){clientProblems.push('Sin plazo o plazo inválido');}if(clientProblems.length>0){problemCount++;problems.push({client:client.name||'Sin nombre',id:client.id||'Sin ID',problems:clientProblems});}});console.log(`Clientes con problemas: ${problemCount}`);if(problems.length>0){console.log('\nDetalles de problemas:');problems.forEach(p=>{console.log(`\nCliente: ${p.client} (ID: ${p.id})`);p.problems.forEach(problem=>{console.log(`  - ${problem}`);});});}else{console.log('✅ Todos los clientes tienen datos completos');}return{totalClients:clients.length,problemCount:problemCount,problems:problems};}
 window.diagnosticarClientes=diagnosticarClientes;
-
 init();
 </script>
 </body>

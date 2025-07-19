@@ -20,7 +20,7 @@
 <body>
 <div class="header"><h1>Sistema de Pagos Andreli</h1></div>
 <div class="container">
-<div class="date-filter"><div><label for="dateFilter" class="form-label">Fecha:</label><input type="date" id="dateFilter" class="form-input" style="width:auto;"></div><div style="display:flex;gap:10px;"><button class="btn-secondary" onclick="setToday()">Hoy</button><button class="btn-secondary" onclick="document.getElementById('excelUpload').click()">📊 Excel</button><input type="file" id="excelUpload" accept=".xlsx,.xls" style="display:none;" onchange="handleExcelUpload(event)"></div></div>
+<div class="date-filter"><div><label for="dateFilter" class="form-label">Fecha:</label><input type="date" id="dateFilter" class="form-input" style="width:auto;"></div><div style="display:flex;gap:10px;"><button class="btn-secondary" onclick="setToday()">Hoy</button><button class="btn-secondary" onclick="syncWithGoogleSheets()" id="syncButton">☁️ Sincronizar</button><button class="btn-secondary" onclick="document.getElementById('excelUpload').click()">📊 Excel</button><input type="file" id="excelUpload" accept=".xlsx,.xls" style="display:none;" onchange="handleExcelUpload(event)"></div></div>
 <div class="stats-card"><h2 class="section-title">Resumen del Día</h2><div class="stats-grid"><div class="stat-item"><div class="stat-value" id="totalPaid">S/0.00</div><div class="stat-label">Total Recibido</div></div><div class="stat-item"><div class="stat-value" id="clientsPaid">0</div><div class="stat-label">Socios que Pagaron</div></div><div class="stat-item"><div class="stat-value" id="totalCash">S/0.00</div><div class="stat-label">💵 Efectivo</div></div><div class="stat-item"><div class="stat-value" id="totalYape">S/0.00</div><div class="stat-label">📱 Yape</div></div></div></div>
 <div class="general-search-container"><h2 class="section-title">Buscar Socio</h2><div class="search-container"><input type="text" class="form-input search-input" id="generalClientSearch" placeholder="🔍 Buscar por nombre, ID o teléfono..." onkeyup="searchAllClients()"></div><div id="searchResults" class="search-results" style="display:none;"></div></div>
 <div class="button-row">
@@ -43,6 +43,216 @@
 <div id="movementsModal" class="modal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title">Movimientos del Socio</h3><button class="close-btn" onclick="closeModal('movementsModal')">&times;</button></div><div id="movementsModalContent"></div></div></div>
 <div id="morosidadModal" class="modal morosidad-modal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title">Reporte de Morosidad</h3><button class="close-btn" onclick="closeModal('morosidadModal')">&times;</button></div><div id="morosidadModalContent"></div></div></div>
 <script>
+// CONFIGURACIÓN DE GOOGLE SHEETS
+// Reemplaza este ID con el ID de tu hoja de Google Sheets
+const GOOGLE_SHEET_ID = '1xEhFS4BBz-0TzM-Xp0MSIpP6eZO2lvJzXjWNIIEwKno';
+const SHEET_NAME = 'Sheet1'; // Nombre de la hoja (generalmente Sheet1)
+
+// Función para sincronizar con Google Sheets
+async function syncWithGoogleSheets() {
+    const syncButton = document.getElementById('syncButton');
+    const originalText = syncButton.textContent;
+    
+    try {
+        // Mostrar estado de carga
+        syncButton.textContent = '⏳ Sincronizando...';
+        syncButton.disabled = true;
+        
+        // URL para obtener los datos como CSV
+        const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Error al conectar con Google Sheets');
+        }
+        
+        const csvText = await response.text();
+        
+        // Procesar CSV
+        const result = processGoogleSheetsData(csvText);
+        
+        if (result.success) {
+            // Guardar última sincronización
+            localStorage.setItem('lastSync', new Date().toISOString());
+            
+            // Mostrar resultados
+            alert(`✅ Sincronización exitosa!\n\n` +
+                  `• Socios nuevos: ${result.added}\n` +
+                  `• Socios actualizados: ${result.updated}\n` +
+                  `• Socios en mora: ${result.morosidad}\n` +
+                  `• Total de socios: ${clients.length}`);
+                  
+            updateDisplay();
+        } else {
+            throw new Error(result.error || 'Error al procesar datos');
+        }
+        
+    } catch (error) {
+        console.error('Error de sincronización:', error);
+        alert('❌ Error al sincronizar:\n\n' + error.message + 
+              '\n\nVerifica que:\n' +
+              '1. El ID de Google Sheets sea correcto\n' +
+              '2. La hoja esté compartida públicamente\n' +
+              '3. Tengas conexión a internet');
+    } finally {
+        // Restaurar botón
+        syncButton.textContent = originalText;
+        syncButton.disabled = false;
+    }
+}
+
+// Función para procesar datos de Google Sheets
+function processGoogleSheetsData(csvText) {
+    try {
+        // Parsear CSV usando Papaparse
+        const Papa = window.Papa || {
+            parse: function(text) {
+                // Parseo básico si Papaparse no está disponible
+                const lines = text.split('\n');
+                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                const data = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    if (lines[i].trim()) {
+                        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                        const row = {};
+                        headers.forEach((header, index) => {
+                            row[header] = values[index] || '';
+                        });
+                        data.push(row);
+                    }
+                }
+                
+                return { data: data };
+            }
+        };
+        
+        const parsed = Papa.parse(csvText, { header: true });
+        const data = parsed.data;
+        
+        let addedCount = 0;
+        let updatedCount = 0;
+        let errorCount = 0;
+        
+        // Mapear columnas (ajusta según tu Excel)
+        data.forEach(row => {
+            try {
+                // Limpiar y obtener valores
+                const id = (row['Id'] || row['ID'] || '').toString().trim();
+                const name = cleanText((row['Nombre'] || '').toString().trim());
+                const phone = (row['Telefono'] || row['Tel'] || row['Teléfono'] || '').toString().trim();
+                const disbursementDate = formatExcelDate(row['Fecha Desem'] || row['FechaDesem'] || '');
+                const frequency = mapFrequency((row['Frec Pago'] || row['FrecPago'] || '').toString().trim());
+                const quota = parseExcelNumber(row['Monto Cuota'] || row['MontoCuota'] || 0);
+                const term = parseInt(row['Plz'] || row['Plazo'] || 0);
+                const mora = parseExcelNumber(row['Mora'] || 0);
+                const totalAtraso = parseExcelNumber(row['Total Atraso'] || row['TotalAtraso'] || 0);
+                const diasAtraso = parseInt(row['Dia Atr'] || row['DiasAtraso'] || 0);
+                const totalDeuda = parseExcelNumber(row['Total Deuda'] || row['TotalDeuda'] || 0);
+                
+                if (!id || !name) return;
+                
+                // Buscar si existe el cliente
+                const existingClient = clients.find(c => c.id === id);
+                
+                if (existingClient) {
+                    // Actualizar cliente existente
+                    existingClient.name = name;
+                    existingClient.phone = phone;
+                    existingClient.disbursementDate = disbursementDate;
+                    existingClient.frequency = frequency;
+                    existingClient.quota = quota;
+                    existingClient.term = term;
+                    existingClient.mora = mora;
+                    existingClient.totalAtraso = totalAtraso;
+                    existingClient.diasAtraso = diasAtraso;
+                    existingClient.totalDeuda = totalDeuda;
+                    updatedCount++;
+                } else {
+                    // Agregar nuevo cliente
+                    clients.push({
+                        id: id,
+                        name: name,
+                        phone: phone,
+                        disbursementDate: disbursementDate,
+                        frequency: frequency,
+                        quota: quota,
+                        term: term,
+                        mora: mora,
+                        totalAtraso: totalAtraso,
+                        diasAtraso: diasAtraso,
+                        totalDeuda: totalDeuda,
+                        createdAt: getPeruvianISOString()
+                    });
+                    addedCount++;
+                }
+            } catch (err) {
+                errorCount++;
+                console.error('Error procesando fila:', err);
+            }
+        });
+        
+        // Guardar datos
+        saveData();
+        
+        const morosidadCount = clients.filter(c => c.diasAtraso > 0).length;
+        
+        return {
+            success: true,
+            added: addedCount,
+            updated: updatedCount,
+            errors: errorCount,
+            morosidad: morosidadCount
+        };
+        
+    } catch (error) {
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
+
+// Función para sincronización automática
+function setupAutoSync() {
+    // Sincronizar automáticamente cada 5 minutos (300000 ms)
+    setInterval(() => {
+        if (navigator.onLine) { // Solo si hay conexión
+            syncWithGoogleSheets();
+        }
+    }, 300000); // 5 minutos
+    
+    // Sincronizar cuando la app vuelva a estar activa
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && navigator.onLine) {
+            const lastSync = localStorage.getItem('lastSync');
+            if (lastSync) {
+                const lastSyncDate = new Date(lastSync);
+                const now = new Date();
+                const diffMinutes = (now - lastSyncDate) / 60000;
+                
+                // Si han pasado más de 5 minutos desde la última sincronización
+                if (diffMinutes > 5) {
+                    syncWithGoogleSheets();
+                }
+            }
+        }
+    });
+}
+
+// Mostrar última sincronización
+function showLastSyncTime() {
+    const lastSync = localStorage.getItem('lastSync');
+    if (lastSync) {
+        const date = new Date(lastSync);
+        const timeStr = date.toLocaleTimeString('es-PE', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        console.log(`Última sincronización: ${timeStr}`);
+    }
+}
+
 let clients=[];let payments=[];let scrollPosition=0;let selectedPaymentType='';
 function getPeruvianDate(date=new Date()){const peruTime=new Date(date.toLocaleString("en-US",{timeZone:"America/Lima"}));return peruTime;}
 function getPeruvianDateString(date=new Date()){const options={timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'};const peruDateStr=date.toLocaleDateString('en-CA',options);return peruDateStr;}

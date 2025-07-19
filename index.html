@@ -16,12 +16,13 @@
 .morosidad-table .btn-circle{width:36px;height:36px;padding:0;margin:0 2px;}
 .button-row{display:flex;gap:10px;margin-bottom:15px}.button-row .btn-primary{flex:1;margin-bottom:0}</style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 </head>
 <body>
 <div class="header"><h1>Sistema de Pagos Andreli</h1></div>
 <div class="container">
 <div class="date-filter"><div><label for="dateFilter" class="form-label">Fecha:</label><input type="date" id="dateFilter" class="form-input" style="width:auto;"></div><div style="display:flex;gap:10px;"><button class="btn-secondary" onclick="setToday()">Hoy</button><button class="btn-secondary" onclick="syncWithGoogleSheets()" id="syncButton">☁️ Sincronizar</button><button class="btn-secondary" onclick="document.getElementById('excelUpload').click()">📊 Excel</button><input type="file" id="excelUpload" accept=".xlsx,.xls" style="display:none;" onchange="handleExcelUpload(event)"></div></div>
-<div class="stats-card"><h2 class="section-title">Resumen del Día</h2><div class="stats-grid"><div class="stat-item"><div class="stat-value" id="totalPaid">S/0.00</div><div class="stat-label">Total Recibido</div></div><div class="stat-item"><div class="stat-value" id="clientsPaid">0</div><div class="stat-label">Socios que Pagaron</div></div><div class="stat-item"><div class="stat-value" id="totalCash">S/0.00</div><div class="stat-label">💵 Efectivo</div></div><div class="stat-item"><div class="stat-value" id="totalYape">S/0.00</div><div class="stat-label">📱 Yape</div></div></div></div>
+<div class="stats-card"><h2 class="section-title">Resumen del Día</h2><div class="stats-grid"><div class="stat-item"><div class="stat-value" id="totalPaid">S/0.00</div><div class="stat-label">Total Recibido</div></div><div class="stat-item"><div class="stat-value" id="clientsPaid">0</div><div class="stat-label">Socios que Pagaron</div></div><div class="stat-item"><div class="stat-value" id="totalCash">S/0.00</div><div class="stat-label">💵 Efectivo</div></div><div class="stat-item"><div class="stat-value" id="totalYape">S/0.00</div><div class="stat-label">📱 Yape</div></div></div><div id="syncStatus" style="margin-top:15px;padding:10px;background:#e3f2fd;border-radius:8px;font-size:12px;color:#1565c0;text-align:center;display:none;"></div></div>
 <div class="general-search-container"><h2 class="section-title">Buscar Socio</h2><div class="search-container"><input type="text" class="form-input search-input" id="generalClientSearch" placeholder="🔍 Buscar por nombre, ID o teléfono..." onkeyup="searchAllClients()"></div><div id="searchResults" class="search-results" style="display:none;"></div></div>
 <div class="button-row">
 <button class="btn-primary" onclick="showAddClientModal()">➕ Agregar Socio</button>
@@ -31,6 +32,10 @@
 <button class="btn-morosidad" onclick="showMorosidadModal()">⚠️ Ver Morosidad</button>
 <button class="btn-morosidad" style="background:#dc3545;" onclick="deleteAllClients()">🗑️ Eliminar Todos los Socios</button>
 </div>
+<!-- Descomentar la siguiente línea si necesitas diagnosticar problemas con Google Sheets -->
+<!-- <div class="button-row" style="margin-top:10px;">
+<button class="btn-secondary" onclick="diagnosticarGoogleSheets()" style="width:100%;background:#6c757d;color:white;">🔍 Diagnosticar Google Sheets</button>
+</div> -->
 <div class="client-list debt-clients-container" id="debtClientsSection" style="display:none;"><h2 class="section-title"><span class="debt-indicator"></span>Socios en Mora</h2><div class="clients-container" id="debtClientsContainer"><div id="debtClientsList"><div class="empty-state">No hay socios en mora</div></div></div></div>
 <div class="client-list"><h2 class="section-title">Socios del Día</h2><div class="clients-container" id="clientsContainer"><div id="clientsList"><div class="empty-state">No hay socios registrados</div></div></div></div>
 <div class="payment-history"><h2 class="section-title">Pagos del Día</h2><div class="payments-container" id="paymentsContainer"><div id="paymentsList"><div class="empty-state">No hay pagos registrados</div></div></div></div>
@@ -44,12 +49,30 @@
 <div id="morosidadModal" class="modal morosidad-modal"><div class="modal-content"><div class="modal-header"><h3 class="modal-title">Reporte de Morosidad</h3><button class="close-btn" onclick="closeModal('morosidadModal')">&times;</button></div><div id="morosidadModalContent"></div></div></div>
 <script>
 // CONFIGURACIÓN DE GOOGLE SHEETS
-// Reemplaza este ID con el ID de tu hoja de Google Sheets
+// ID de tu hoja de Google Sheets configurado
 const GOOGLE_SHEET_ID = '1xEhFS4BBz-0TzM-Xp0MSIpP6eZO2lvJzXjWNIIEwKno';
 const SHEET_NAME = 'Sheet1'; // Nombre de la hoja (generalmente Sheet1)
 
+// Verificar si se configuró el ID
+function checkGoogleSheetsConfig() {
+    if (GOOGLE_SHEET_ID === 'TU_ID_DE_GOOGLE_SHEETS_AQUÍ' || GOOGLE_SHEET_ID === '') {
+        alert('⚠️ CONFIGURACIÓN REQUERIDA\n\n' +
+              'Para usar la sincronización con Google Sheets:\n\n' +
+              '1. Abre el código fuente de esta página\n' +
+              '2. Busca la línea: const GOOGLE_SHEET_ID = ...\n' +
+              '3. Reemplaza con tu ID real de Google Sheets\n\n' +
+              'El ID está en la URL de tu hoja:\n' +
+              'docs.google.com/spreadsheets/d/[ESTE_ES_EL_ID]/edit');
+        return false;
+    }
+    return true;
+}
+
 // Función para sincronizar con Google Sheets
 async function syncWithGoogleSheets() {
+    // Verificar configuración
+    if (!checkGoogleSheetsConfig()) return;
+    
     const syncButton = document.getElementById('syncButton');
     const originalText = syncButton.textContent;
     
@@ -74,6 +97,9 @@ async function syncWithGoogleSheets() {
         if (result.success) {
             // Guardar última sincronización
             localStorage.setItem('lastSync', new Date().toISOString());
+            
+            // Actualizar estado visual
+            showLastSyncTime();
             
             // Mostrar resultados
             alert(`✅ Sincronización exitosa!\n\n` +
@@ -101,56 +127,188 @@ async function syncWithGoogleSheets() {
     }
 }
 
-// Función para procesar datos de Google Sheets
+// Función mejorada para procesar datos de Google Sheets (específica para archivos de morosidad)
 function processGoogleSheetsData(csvText) {
     try {
-        // Parsear CSV usando Papaparse
-        const Papa = window.Papa || {
-            parse: function(text) {
-                // Parseo básico si Papaparse no está disponible
-                const lines = text.split('\n');
-                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-                const data = [];
-                
-                for (let i = 1; i < lines.length; i++) {
-                    if (lines[i].trim()) {
-                        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-                        const row = {};
-                        headers.forEach((header, index) => {
-                            row[header] = values[index] || '';
-                        });
-                        data.push(row);
-                    }
-                }
-                
-                return { data: data };
+        console.log('Procesando datos de Google Sheets...');
+        
+        // Usar PapaParse para un mejor parsing
+        const parsed = Papa.parse(csvText, {
+            header: false, // Primero sin headers para detectar dónde empiezan los datos reales
+            skipEmptyLines: true,
+            delimiter: ',',
+            encoding: 'UTF-8'
+        });
+        
+        let dataRows = parsed.data;
+        let headerRowIndex = -1;
+        let headers = [];
+        
+        // Buscar la fila que contiene los headers reales (puede no ser la primera)
+        for (let i = 0; i < Math.min(dataRows.length, 10); i++) {
+            const row = dataRows[i];
+            // Buscar una fila que tenga "Id" o "ID" y "Nombre"
+            if (row.some(cell => cell && (cell.toString().toLowerCase() === 'id' || cell.toString().toLowerCase().includes('id'))) &&
+                row.some(cell => cell && cell.toString().toLowerCase().includes('nombre'))) {
+                headerRowIndex = i;
+                headers = row.map(h => (h || '').toString().trim());
+                break;
             }
+        }
+        
+        if (headerRowIndex === -1) {
+            console.error('No se encontraron headers válidos');
+            return { success: false, error: 'No se encontraron columnas válidas en el archivo' };
+        }
+        
+        console.log('Headers encontrados en fila', headerRowIndex + 1, ':', headers);
+        
+        // Mapeo específico para archivos de morosidad
+        const columnIndexes = {
+            id: -1,
+            nombre: -1,
+            telefono: -1,
+            fechaDesem: -1,
+            monto: -1,
+            plazo: -1,
+            frecPago: -1,
+            montoCuota: -1,
+            mora: -1,
+            totalAtraso: -1,
+            diasAtraso: -1,
+            totalDeuda: -1
         };
         
-        const parsed = Papa.parse(csvText, { header: true });
-        const data = parsed.data;
+        // Buscar índices de columnas necesarias
+        headers.forEach((header, index) => {
+            const h = header.toLowerCase().replace(/\s+/g, '');
+            
+            // ID
+            if (h === 'id' || h === 'codigo' || h === 'nro' || h === 'número') {
+                columnIndexes.id = index;
+            }
+            // Nombre
+            else if (h.includes('nombre') || h.includes('cliente') || h.includes('socio')) {
+                columnIndexes.nombre = index;
+            }
+            // Teléfono
+            else if (h.includes('tel') || h.includes('telefono') || h.includes('celular')) {
+                columnIndexes.telefono = index;
+            }
+            // Fecha Desembolso
+            else if (h.includes('fechadesem') || h.includes('desembolso') || (h.includes('fecha') && h.includes('desem'))) {
+                columnIndexes.fechaDesem = index;
+            }
+            // Monto
+            else if (h === 'monto' || h === 'capital' || h === 'prestamo' || h === 'préstamo') {
+                columnIndexes.monto = index;
+            }
+            // Plazo
+            else if (h === 'plz' || h === 'plazo' || h.includes('plazo') || h === 'plz.') {
+                columnIndexes.plazo = index;
+            }
+            // Frecuencia de Pago
+            else if (h.includes('frecpago') || h.includes('frecuencia') || (h.includes('frec') && h.includes('pago'))) {
+                columnIndexes.frecPago = index;
+            }
+            // Monto Cuota
+            else if (h.includes('montocuota') || h.includes('cuota') || (h.includes('monto') && h.includes('cuota'))) {
+                columnIndexes.montoCuota = index;
+            }
+            // Mora
+            else if (h === 'mora' || h.includes('mora') || h.includes('moratorio')) {
+                columnIndexes.mora = index;
+            }
+            // Total Atraso
+            else if (h.includes('totalatraso') || h.includes('atraso') || (h.includes('total') && h.includes('atraso'))) {
+                columnIndexes.totalAtraso = index;
+            }
+            // Días Atraso
+            else if (h.includes('diaatr') || h.includes('diasatraso') || (h.includes('dia') && h.includes('atr'))) {
+                columnIndexes.diasAtraso = index;
+            }
+            // Total Deuda
+            else if (h.includes('totaldeuda') || h.includes('deudatotal') || (h.includes('total') && h.includes('deuda')) || h === 'saldo') {
+                columnIndexes.totalDeuda = index;
+            }
+        });
+        
+        console.log('Mapeo de columnas:', columnIndexes);
+        
+        // Verificar que tengamos al menos ID y Nombre
+        if (columnIndexes.id === -1 || columnIndexes.nombre === -1) {
+            return { 
+                success: false, 
+                error: 'No se encontraron las columnas mínimas requeridas (Id y Nombre)' 
+            };
+        }
         
         let addedCount = 0;
         let updatedCount = 0;
-        let errorCount = 0;
+        let skippedCount = 0;
         
-        // Mapear columnas (ajusta según tu Excel)
-        data.forEach(row => {
+        // Procesar datos empezando después de la fila de headers
+        for (let i = headerRowIndex + 1; i < dataRows.length; i++) {
+            const row = dataRows[i];
+            
+            // Saltar filas vacías o con menos columnas que los headers
+            if (!row || row.length < headers.length / 2) {
+                continue;
+            }
+            
             try {
-                // Limpiar y obtener valores
-                const id = (row['Id'] || row['ID'] || '').toString().trim();
-                const name = cleanText((row['Nombre'] || '').toString().trim());
-                const phone = (row['Telefono'] || row['Tel'] || row['Teléfono'] || '').toString().trim();
-                const disbursementDate = formatExcelDate(row['Fecha Desem'] || row['FechaDesem'] || '');
-                const frequency = mapFrequency((row['Frec Pago'] || row['FrecPago'] || '').toString().trim());
-                const quota = parseExcelNumber(row['Monto Cuota'] || row['MontoCuota'] || 0);
-                const term = parseInt(row['Plz'] || row['Plazo'] || 0);
-                const mora = parseExcelNumber(row['Mora'] || 0);
-                const totalAtraso = parseExcelNumber(row['Total Atraso'] || row['TotalAtraso'] || 0);
-                const diasAtraso = parseInt(row['Dia Atr'] || row['DiasAtraso'] || 0);
-                const totalDeuda = parseExcelNumber(row['Total Deuda'] || row['TotalDeuda'] || 0);
+                // Obtener valores usando los índices encontrados
+                const id = row[columnIndexes.id] ? row[columnIndexes.id].toString().trim() : '';
+                const name = row[columnIndexes.nombre] ? cleanText(row[columnIndexes.nombre].toString().trim()) : '';
                 
-                if (!id || !name) return;
+                // Saltar si no hay ID o nombre
+                if (!id || !name || id === '' || name === '') {
+                    skippedCount++;
+                    continue;
+                }
+                
+                // Saltar si el ID parece ser un total o subtotal
+                if (id.toLowerCase().includes('total') || name.toLowerCase().includes('total')) {
+                    continue;
+                }
+                
+                // Obtener el resto de valores con valores por defecto
+                const phone = columnIndexes.telefono !== -1 && row[columnIndexes.telefono] ? 
+                    row[columnIndexes.telefono].toString().trim() : '';
+                    
+                const disbursementDate = columnIndexes.fechaDesem !== -1 && row[columnIndexes.fechaDesem] ? 
+                    formatExcelDate(row[columnIndexes.fechaDesem]) : '';
+                    
+                const monto = columnIndexes.monto !== -1 && row[columnIndexes.monto] ? 
+                    parseExcelNumber(row[columnIndexes.monto]) : 0;
+                    
+                const term = columnIndexes.plazo !== -1 && row[columnIndexes.plazo] ? 
+                    parseInt(row[columnIndexes.plazo]) || 0 : 0;
+                    
+                const frequency = columnIndexes.frecPago !== -1 && row[columnIndexes.frecPago] ? 
+                    mapFrequency(row[columnIndexes.frecPago].toString().trim()) : '';
+                    
+                const quota = columnIndexes.montoCuota !== -1 && row[columnIndexes.montoCuota] ? 
+                    parseExcelNumber(row[columnIndexes.montoCuota]) : 0;
+                    
+                const mora = columnIndexes.mora !== -1 && row[columnIndexes.mora] ? 
+                    parseExcelNumber(row[columnIndexes.mora]) : 0;
+                    
+                const totalAtraso = columnIndexes.totalAtraso !== -1 && row[columnIndexes.totalAtraso] ? 
+                    parseExcelNumber(row[columnIndexes.totalAtraso]) : 0;
+                    
+                const diasAtraso = columnIndexes.diasAtraso !== -1 && row[columnIndexes.diasAtraso] ? 
+                    parseInt(row[columnIndexes.diasAtraso]) || 0 : 0;
+                    
+                const totalDeuda = columnIndexes.totalDeuda !== -1 && row[columnIndexes.totalDeuda] ? 
+                    parseExcelNumber(row[columnIndexes.totalDeuda]) : 0;
+                
+                // Log para los primeros registros
+                if (i < headerRowIndex + 4) {
+                    console.log(`Procesando: ${id} - ${name}`, {
+                        phone, disbursementDate, frequency, quota, diasAtraso
+                    });
+                }
                 
                 // Buscar si existe el cliente
                 const existingClient = clients.find(c => c.id === id);
@@ -158,17 +316,25 @@ function processGoogleSheetsData(csvText) {
                 if (existingClient) {
                     // Actualizar cliente existente
                     existingClient.name = name;
-                    existingClient.phone = phone;
-                    existingClient.disbursementDate = disbursementDate;
-                    existingClient.frequency = frequency;
-                    existingClient.quota = quota;
-                    existingClient.term = term;
+                    existingClient.phone = phone || existingClient.phone;
+                    existingClient.disbursementDate = disbursementDate || existingClient.disbursementDate;
+                    existingClient.frequency = frequency || existingClient.frequency;
+                    existingClient.quota = quota > 0 ? quota : existingClient.quota;
+                    existingClient.term = term > 0 ? term : existingClient.term;
+                    existingClient.monto = monto;
                     existingClient.mora = mora;
                     existingClient.totalAtraso = totalAtraso;
                     existingClient.diasAtraso = diasAtraso;
                     existingClient.totalDeuda = totalDeuda;
                     updatedCount++;
                 } else {
+                    // Para nuevos clientes, requerir datos mínimos
+                    if (!disbursementDate || !frequency || quota <= 0 || term <= 0) {
+                        console.warn(`Cliente ${name} (${id}) no tiene datos completos para agregarlo`);
+                        skippedCount++;
+                        continue;
+                    }
+                    
                     // Agregar nuevo cliente
                     clients.push({
                         id: id,
@@ -178,6 +344,7 @@ function processGoogleSheetsData(csvText) {
                         frequency: frequency,
                         quota: quota,
                         term: term,
+                        monto: monto,
                         mora: mora,
                         totalAtraso: totalAtraso,
                         diasAtraso: diasAtraso,
@@ -186,26 +353,36 @@ function processGoogleSheetsData(csvText) {
                     });
                     addedCount++;
                 }
+                
             } catch (err) {
-                errorCount++;
-                console.error('Error procesando fila:', err);
+                console.error(`Error procesando fila ${i + 1}:`, err);
+                skippedCount++;
             }
-        });
+        }
         
         // Guardar datos
         saveData();
         
         const morosidadCount = clients.filter(c => c.diasAtraso > 0).length;
         
+        console.log('Resumen de sincronización:', {
+            added: addedCount,
+            updated: updatedCount,
+            skipped: skippedCount,
+            morosidad: morosidadCount,
+            totalClients: clients.length
+        });
+        
         return {
             success: true,
             added: addedCount,
             updated: updatedCount,
-            errors: errorCount,
+            errors: skippedCount,
             morosidad: morosidadCount
         };
         
     } catch (error) {
+        console.error('Error general en processGoogleSheetsData:', error);
         return {
             success: false,
             error: error.message
@@ -213,7 +390,42 @@ function processGoogleSheetsData(csvText) {
     }
 }
 
-// Función para sincronización automática
+// Función de diagnóstico para verificar el mapeo de columnas
+async function diagnosticarGoogleSheets() {
+    // Verificar configuración
+    if (!checkGoogleSheetsConfig()) return;
+    
+    try {
+        const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
+        const response = await fetch(url);
+        const csvText = await response.text();
+        
+        // Parsear solo los headers y primeras filas
+        const parsed = Papa.parse(csvText, {
+            header: true,
+            skipEmptyLines: true,
+            trimHeaders: true,
+            preview: 5 // Solo las primeras 5 filas
+        });
+        
+        console.log('=== DIAGNÓSTICO DE GOOGLE SHEETS ===');
+        console.log('Headers detectados:', parsed.meta.fields);
+        console.log('Primeras filas de datos:', parsed.data);
+        
+        // Mostrar mapeo de columnas
+        const headers = parsed.meta.fields || [];
+        console.log('\n=== MAPEO DE COLUMNAS ===');
+        console.log('ID:', headers.find(h => h.toLowerCase().includes('id')) || 'NO ENCONTRADO');
+        console.log('Nombre:', headers.find(h => h.toLowerCase().includes('nombre')) || 'NO ENCONTRADO');
+        console.log('Teléfono:', headers.find(h => h.toLowerCase().includes('tel')) || 'NO ENCONTRADO');
+        console.log('Fecha Desem:', headers.find(h => h.toLowerCase().includes('fecha')) || 'NO ENCONTRADO');
+        
+        alert('Diagnóstico completado. Abre la consola del navegador (F12) para ver los detalles.');
+    } catch (error) {
+        console.error('Error en diagnóstico:', error);
+        alert('Error al diagnosticar. Verifica la consola.');
+    }
+}
 function setupAutoSync() {
     // Sincronizar automáticamente cada 5 minutos (300000 ms)
     setInterval(() => {
@@ -221,6 +433,11 @@ function setupAutoSync() {
             syncWithGoogleSheets();
         }
     }, 300000); // 5 minutos
+    
+    // Actualizar el estado de sincronización cada minuto
+    setInterval(() => {
+        showLastSyncTime();
+    }, 60000); // 1 minuto
     
     // Sincronizar cuando la app vuelva a estar activa
     document.addEventListener('visibilitychange', () => {
@@ -243,13 +460,38 @@ function setupAutoSync() {
 // Mostrar última sincronización
 function showLastSyncTime() {
     const lastSync = localStorage.getItem('lastSync');
-    if (lastSync) {
+    const syncStatus = document.getElementById('syncStatus');
+    
+    if (lastSync && syncStatus) {
         const date = new Date(lastSync);
         const timeStr = date.toLocaleTimeString('es-PE', { 
             hour: '2-digit', 
             minute: '2-digit' 
         });
-        console.log(`Última sincronización: ${timeStr}`);
+        const dateStr = date.toLocaleDateString('es-PE');
+        
+        // Calcular tiempo transcurrido
+        const now = new Date();
+        const diffMinutes = Math.floor((now - date) / 60000);
+        let timeAgo = '';
+        
+        if (diffMinutes < 1) {
+            timeAgo = 'hace menos de un minuto';
+        } else if (diffMinutes < 60) {
+            timeAgo = `hace ${diffMinutes} minuto${diffMinutes > 1 ? 's' : ''}`;
+        } else {
+            const hours = Math.floor(diffMinutes / 60);
+            timeAgo = `hace ${hours} hora${hours > 1 ? 's' : ''}`;
+        }
+        
+        syncStatus.innerHTML = `☁️ Última sincronización: ${timeStr} (${timeAgo})`;
+        syncStatus.style.display = 'block';
+        
+        // Actualizar el botón de sincronización con la información
+        const syncButton = document.getElementById('syncButton');
+        if (syncButton) {
+            syncButton.title = `Última sincronización: ${timeStr}`;
+        }
     }
 }
 
@@ -270,7 +512,28 @@ function mapFrequency(freq){if(!freq)return'';const upperFreq=freq.toString().to
 function handleExcelUpload(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){try{let fileContent=e.target.result;let data=[];let columnMap={};let isHtmlContent=false;if(file.name.toLowerCase().endsWith('.xls')){try{const decoder=new TextDecoder('windows-1252');fileContent=decoder.decode(new Uint8Array(fileContent));isHtmlContent=fileContent.includes('<table')||fileContent.includes('<TABLE')||fileContent.includes('<tr')||fileContent.includes('<TR');}catch(err){console.error('Error decodificando:',err);}}else{isHtmlContent=typeof fileContent==='string'&&(fileContent.includes('<table')||fileContent.includes('<TABLE')||fileContent.includes('<tr')||fileContent.includes('<TR'));}if(isHtmlContent){const htmlContent=fileContent;const rowMatches=htmlContent.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi)||[];function extractCellContent(rowHtml){const cellMatches=rowHtml.match(/<t[hd][^>]*>([^<]*)<\/t[hd]>/gi)||[];return cellMatches.map(cell=>{const content=cell.replace(/<[^>]+>/g,'').trim();return cleanText(content);});}let headerRowIndex=-1;let headers=[];for(let i=0;i<rowMatches.length;i++){const cells=extractCellContent(rowMatches[i]);if(cells.some(cell=>cell==='Id'||cell==='Nombre')){headerRowIndex=i;headers=cells;break;}}if(headerRowIndex===-1){alert('No se encontraron las columnas esperadas en el archivo');return;}columnMap={id:headers.indexOf('Id'),nombre:headers.indexOf('Nombre'),telefono:headers.findIndex(h=>h.includes('Tel')),fechaDesem:headers.findIndex(h=>h.includes('Fecha Desem')),monto:headers.indexOf('Monto'),plz:headers.indexOf('Plz'),frecPago:headers.findIndex(h=>h.includes('Frec Pago')),montoCuota:headers.findIndex(h=>h.includes('Monto Cuota')),mora:headers.indexOf('Mora'),totalAtraso:headers.findIndex(h=>h.includes('Total Atraso')),diaAtr:headers.findIndex(h=>h.includes('Dia Atr')),totalDeuda:headers.findIndex(h=>h.includes('Total Deuda'))};console.log('Mapeo de columnas:',columnMap);console.log('Headers encontrados:',headers);for(let i=headerRowIndex+1;i<rowMatches.length;i++){const cells=extractCellContent(rowMatches[i]);if(cells.length>columnMap.id&&cells[columnMap.id]){data.push(cells);}}}else{const workbook=XLSX.read(new Uint8Array(fileContent),{type:'array',cellDates:false,raw:true});const firstSheet=workbook.Sheets[workbook.SheetNames[0]];const jsonData=XLSX.utils.sheet_to_json(firstSheet,{header:1,raw:true});if(jsonData.length<2){alert('El archivo Excel está vacío o no tiene el formato correcto');return;}const headers=jsonData[0];console.log('Headers encontrados:',headers);columnMap={id:headers.indexOf('Id'),nombre:headers.indexOf('Nombre'),telefono:headers.findIndex(h=>h&&h.toString().includes('Tel')),fechaDesem:headers.findIndex(h=>h&&h.toString().includes('Fecha Desem')),monto:headers.indexOf('Monto'),plz:headers.indexOf('Plz'),frecPago:headers.findIndex(h=>h&&h.toString().includes('Frec Pago')),montoCuota:headers.findIndex(h=>h&&h.toString().includes('Monto Cuota')),mora:headers.indexOf('Mora'),totalAtraso:headers.findIndex(h=>h&&h.toString().includes('Total Atraso')),diaAtr:headers.findIndex(h=>h&&h.toString().includes('Dia Atr')),totalDeuda:headers.findIndex(h=>h&&h.toString().includes('Total Deuda'))};data=jsonData.slice(1);}let updatedCount=0;let addedCount=0;let errorCount=0;const errors=[];for(let i=0;i<data.length;i++){const row=data[i];if(!row[columnMap.id]||!row[columnMap.nombre])continue;try{const id=row[columnMap.id].toString().trim();const name=cleanText(row[columnMap.nombre].toString().trim());const phone=columnMap.telefono>=0&&row[columnMap.telefono]?row[columnMap.telefono].toString().trim():'';const disbursementDate=columnMap.fechaDesem>=0&&row[columnMap.fechaDesem]?formatExcelDate(row[columnMap.fechaDesem]):'';const monto=columnMap.monto>=0&&row[columnMap.monto]?parseExcelNumber(row[columnMap.monto]):0;const term=columnMap.plz>=0&&row[columnMap.plz]?parseInt(row[columnMap.plz]):0;const frequency=columnMap.frecPago>=0&&row[columnMap.frecPago]?mapFrequency(row[columnMap.frecPago].toString().trim()):'';const quota=columnMap.montoCuota>=0&&row[columnMap.montoCuota]?parseExcelNumber(row[columnMap.montoCuota]):0;const mora=columnMap.mora>=0&&row[columnMap.mora]?parseExcelNumber(row[columnMap.mora]):0;const totalAtraso=columnMap.totalAtraso>=0&&row[columnMap.totalAtraso]?parseExcelNumber(row[columnMap.totalAtraso]):0;const diasAtraso=columnMap.diaAtr>=0&&row[columnMap.diaAtr]?parseInt(row[columnMap.diaAtr]):0;
 const totalDeuda=columnMap.totalDeuda>=0&&row[columnMap.totalDeuda]?parseExcelNumber(row[columnMap.totalDeuda]):0;if(!disbursementDate){errors.push(`Fila ${i+1}: Fecha de desembolso inválida para ${name}`);errorCount++;continue;}if(!term||term<=0){errors.push(`Fila ${i+1}: Plazo inválido para ${name}`);errorCount++;continue;}if(!frequency){errors.push(`Fila ${i+1}: Frecuencia inválida para ${name} (valor original: "${columnMap.frecPago>=0&&row[columnMap.frecPago]?row[columnMap.frecPago]:'vacío'}")`);errorCount++;continue;}if(!quota||quota<=0){errors.push(`Fila ${i+1}: Monto de cuota inválido para ${name}`);errorCount++;continue;}const existingClient=clients.find(c=>c.id===id);if(existingClient){existingClient.name=name;existingClient.phone=phone;existingClient.disbursementDate=disbursementDate;existingClient.term=term;existingClient.frequency=frequency;existingClient.quota=quota;existingClient.monto=monto;existingClient.mora=mora;existingClient.totalAtraso=totalAtraso;existingClient.diasAtraso=diasAtraso;existingClient.totalDeuda=totalDeuda;updatedCount++;console.log('Socio actualizado:',existingClient);}else{const newClient={id:id,name:name,phone:phone,disbursementDate:disbursementDate,frequency:frequency,quota:quota,term:term,monto:monto,mora:mora,totalAtraso:totalAtraso,diasAtraso:diasAtraso,totalDeuda:totalDeuda,createdAt:getPeruvianISOString()};clients.push(newClient);addedCount++;console.log('Socio agregado:',newClient);}}catch(err){errors.push(`Fila ${i+1}: Error al procesar - ${err.message}`);errorCount++;}}saveData();updateDisplay();let message=`Archivo procesado:\n- Socios nuevos: ${addedCount}\n- Socios actualizados: ${updatedCount}`;const morosidadCount=clients.filter(c=>c.diasAtraso>0).length;message+=`\n- Socios en mora: ${morosidadCount}`;if(errorCount>0){message+=`\n- Errores: ${errorCount}\n\nDetalles de errores:\n${errors.slice(0,5).join('\n')}`;if(errors.length>5){message+=`\n... y ${errors.length-5} errores más`;}}alert(message);event.target.value='';}catch(error){alert('Error al procesar el archivo. Asegúrate de que sea un archivo Excel válido.\n\nError: '+error.message);console.error('Error completo:',error);event.target.value='';}};if(file.name.toLowerCase().endsWith('.xls')){reader.readAsArrayBuffer(file);}else{reader.readAsArrayBuffer(file);}}
 const excelClients=[];
-function init(){loadData();importExcelClients();setToday();updateDisplay();document.addEventListener('click',function(e){if(!e.target.closest('.form-group')){hideClientDropdown();}});}
+function init(){
+    loadData();
+    importExcelClients();
+    setToday();
+    updateDisplay();
+    setupAutoSync();
+    showLastSyncTime();
+    
+    // Sincronización inicial si hay conexión
+    if (navigator.onLine && GOOGLE_SHEET_ID !== 'TU_ID_DE_GOOGLE_SHEETS_AQUÍ') {
+        setTimeout(() => {
+            console.log('Ejecutando sincronización inicial...');
+            syncWithGoogleSheets();
+        }, 1000);
+    }
+    
+    document.addEventListener('click',function(e){
+        if(!e.target.closest('.form-group')){
+            hideClientDropdown();
+        }
+    });
+}
 function importExcelClients(){localStorage.removeItem('excelClientsImported');localStorage.removeItem('excelClientsImported_v2');localStorage.removeItem('excelClientsImported_v3');localStorage.removeItem('excelClientsImported_v4');localStorage.removeItem('excelClientsImported_v5');localStorage.removeItem('excelClientsImported_v6');localStorage.removeItem('excelClientsImported_v7');localStorage.removeItem('excelClientsImported_v8');localStorage.removeItem('excelClientsImported_v9');localStorage.removeItem('excelClientsImported_v10');const savedImport=localStorage.getItem('excelClientsImported_v11');if(!savedImport){excelClients.forEach(excelClient=>{const existingClient=clients.find(c=>c.id===excelClient.id);if(existingClient){existingClient.quota=excelClient.quota;existingClient.term=excelClient.term;existingClient.disbursementDate=excelClient.disbursementDate;existingClient.frequency=excelClient.frequency;existingClient.phone=excelClient.phone;existingClient.name=excelClient.name;}else{clients.push({id:excelClient.id,name:excelClient.name,phone:excelClient.phone,disbursementDate:excelClient.disbursementDate,frequency:excelClient.frequency,quota:excelClient.quota,term:excelClient.term,createdAt:getPeruvianISOString()});}});localStorage.setItem('excelClientsImported_v11','true');saveData();}}
 function searchAllClients(){const searchTerm=document.getElementById('generalClientSearch').value.toLowerCase();const resultsContainer=document.getElementById('searchResults');if(searchTerm===''){resultsContainer.style.display='none';return;}const filteredClients=clients.filter(client=>client.name.toLowerCase().includes(searchTerm)||client.id.includes(searchTerm)||(client.phone&&client.phone.includes(searchTerm)));resultsContainer.style.display='block';if(filteredClients.length===0){resultsContainer.innerHTML='<div class="no-results">No se encontraron socios</div>';}else{resultsContainer.innerHTML=filteredClients.map(client=>`<div class="search-result-item" onclick="showClientDetailsModal('${client.id}')"><div style="font-size:11px;color:#999;">ID:${client.id}</div><div style="font-weight:600;">${client.name}</div>${client.phone?`<div style="font-size:13px;color:#666;">${client.phone}</div>`:''}</div>`).join('');}}
 function showClientDetailsModal(clientId){const client=clients.find(c=>c.id===clientId);if(!client)return;const today=getPeruvianDate();const nextPaymentInfo=getNextPaymentDate(client);const clientPayments=payments.filter(p=>p.clientId===clientId);const totalPaid=clientPayments.reduce((sum,p)=>sum+p.amount,0);const totalDeuda=client.totalDeuda||(client.quota?(client.quota*client.term)-totalPaid:0);const content=document.getElementById('clientDetailsContent');content.innerHTML=`<div class="client-detail-info"><div class="detail-row"><span class="detail-label">ID:</span><span class="detail-value">${client.id}</span></div><div class="detail-row"><span class="detail-label">Nombre:</span><span class="detail-value">${client.name}</span></div><div class="detail-row"><span class="detail-label">Teléfono:</span><span class="detail-value">${client.phone||'No registrado'}</span></div><div class="detail-row"><span class="detail-label">Fecha de desembolso:</span><span class="detail-value">${client.disbursementDate?formatPeruvianDate(client.disbursementDate):'N/A'}</span></div><div class="detail-row"><span class="detail-label">Frecuencia:</span><span class="detail-value">${client.frequency||'N/A'}</span></div><div class="detail-row"><span class="detail-label">Cuota:</span><span class="detail-value" style="color:#1a5490;">S/${client.quota?formatNumber(client.quota):'0.00'}</span></div><div class="detail-row"><span class="detail-label">Plazo:</span><span class="detail-value">${client.term?formatInteger(client.term):'N/A'} cuotas</span></div>${client.diasAtraso>0?`<div class="detail-row"><span class="detail-label">Días de atraso:</span><span class="detail-value" style="color:#dc3545;">${client.diasAtraso} días</span></div><div class="detail-row"><span class="detail-label">Mora:</span><span class="detail-value" style="color:#dc3545;">S/${formatNumber(client.mora||0)}</span></div><div class="detail-row"><span class="detail-label">Total atraso:</span><span class="detail-value" style="color:#dc3545;">S/${formatNumber(client.totalAtraso||0)}</span></div>`:''}<div class="detail-row"><span class="detail-label">Próximo pago:</span><span class="detail-value">${nextPaymentInfo}</span></div><div class="detail-row"><span class="detail-label">Total pagado:</span><span class="detail-value" style="color:#28a745;">S/${formatNumber(totalPaid)}</span></div><div class="detail-row"><span class="detail-label">Total deuda:</span><span class="detail-value" style="color:#dc3545;">S/${formatNumber(totalDeuda)}</span></div><div class="detail-row"><span class="detail-label">Número de pagos:</span><span class="detail-value">${formatInteger(clientPayments.length)}</span></div></div><div class="action-buttons"><button class="btn-action btn-schedule" onclick="showPaymentSchedule('${client.id}')">📅 Crono</button><button class="btn-action btn-movements" onclick="showClientMovements('${client.id}')">📊 Mov.</button>${client.phone?`<button class="btn-action btn-call" onclick="makeCall('${client.phone}')">📞 Llamar</button><button class="btn-action btn-whatsapp" onclick="openWhatsApp('${client.phone}')">📱 WhatsApp</button>`:''}<button class="btn-action btn-edit-client" onclick="showEditClientModal('${client.id}');closeModal('clientDetailsModal');">✏️ Modificar</button><button class="btn-action btn-delete-client" onclick="deleteClientFromDetails('${client.id}')">🗑️ Eliminar</button></div>`;showModal('clientDetailsModal');}

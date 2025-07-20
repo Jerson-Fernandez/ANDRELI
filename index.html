@@ -219,7 +219,7 @@ function processGoogleSheetsData(csvText) {
             else if (h === 'mora' || h.includes('mora') || h.includes('moratorio')) {
                 columnIndexes.mora = index;
             }
-            // Total Atraso
+            // Total Atraso - MEJORADO
             else if (h === 'totalatraso' || h.includes('totalatraso') || 
                      (h.includes('total') && h.includes('atraso')) || 
                      h === 'total_atraso' || h === 'atraso') {
@@ -529,7 +529,6 @@ function parseExcelNumber(value) {
     }
     return 0;
 }
-
 function cleanText(text){if(!text)return text;return text.replace(/�/g,'ñ').replace(/Ñ/g,'Ñ').replace(/ñ/g,'ñ').replace(/Ã±/g,'ñ').replace(/Ã'/g,'Ñ').replace(/Ã¡/g,'á').replace(/Ã©/g,'é').replace(/Ã­/g,'í').replace(/Ã³/g,'ó').replace(/Ãº/g,'ú').replace(/Ã/g,'Á').replace(/Ã‰/g,'É').replace(/Ã/g,'Í').replace(/Ã"/g,'Ó').replace(/Ãš/g,'Ú').replace(/á/g,'á').replace(/é/g,'é').replace(/í/g,'í').replace(/ó/g,'ó').replace(/ú/g,'ú').replace(/Ã¼/g,'ü').replace(/Ã¤/g,'ä').replace(/Ã¶/g,'ö').replace(/Â¿/g,'¿').replace(/Â¡/g,'¡').replace(/â€œ/g,'"').replace(/â€/g,'"').replace(/â€™/g,"'").replace(/â€˜/g,"'").replace(/â€"/g,'–').replace(/â€"/g,'—').replace(/\u00f1/g,'ñ').replace(/\u00d1/g,'Ñ').replace(/\u00e1/g,'á').replace(/\u00e9/g,'é').replace(/\u00ed/g,'í').replace(/\u00f3/g,'ó').replace(/\u00fa/g,'ú').replace(/\u00c1/g,'Á').replace(/\u00c9/g,'É').replace(/\u00cd/g,'Í').replace(/\u00d3/g,'Ó').replace(/\u00da/g,'Ú');}
 function mapFrequency(freq){if(!freq)return'';const upperFreq=freq.toString().toUpperCase().trim();const mappings={'DIAR':'DIARIO','SEMA':'SEMANAL','QUIN':'QUINCENAL','MENS':'MENSUAL','DIARIO':'DIARIO','DIARIA':'DIARIO','SEMANAL':'SEMANAL','QUINCENAL':'QUINCENAL','MENSUAL':'MENSUAL','D':'DIARIO','S':'SEMANAL','Q':'QUINCENAL','M':'MENSUAL'};if(mappings[upperFreq]){return mappings[upperFreq];}if(upperFreq.includes('DIAR'))return'DIARIO';if(upperFreq.includes('SEMA'))return'SEMANAL';if(upperFreq.includes('QUIN'))return'QUINCENAL';if(upperFreq.includes('MENS'))return'MENSUAL';console.warn('Frecuencia no reconocida:',freq);return'';}
 function handleExcelUpload(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){try{let fileContent=e.target.result;let data=[];let columnMap={};let isHtmlContent=false;if(file.name.toLowerCase().endsWith('.xls')){try{const decoder=new TextDecoder('windows-1252');fileContent=decoder.decode(new Uint8Array(fileContent));isHtmlContent=fileContent.includes('<table')||fileContent.includes('<TABLE')||fileContent.includes('<tr')||fileContent.includes('<TR');}catch(err){console.error('Error decodificando:',err);}}else{isHtmlContent=typeof fileContent==='string'&&(fileContent.includes('<table')||fileContent.includes('<TABLE')||fileContent.includes('<tr')||fileContent.includes('<TR'));}if(isHtmlContent){const htmlContent=fileContent;const rowMatches=htmlContent.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi)||[];function extractCellContent(rowHtml){const cellMatches=rowHtml.match(/<t[hd][^>]*>([^<]*)<\/t[hd]>/gi)||[];return cellMatches.map(cell=>{const content=cell.replace(/<[^>]+>/g,'').trim();return cleanText(content);});}let headerRowIndex=-1;let headers=[];for(let i=0;i<rowMatches.length;i++){const cells=extractCellContent(rowMatches[i]);if(cells.some(cell=>cell==='Id'||cell==='Nombre')){headerRowIndex=i;headers=cells;break;}}if(headerRowIndex===-1){alert('No se encontraron las columnas esperadas en el archivo');return;}columnMap={id:headers.indexOf('Id'),nombre:headers.indexOf('Nombre'),telefono:headers.findIndex(h=>h.includes('Tel')),fechaDesem:headers.findIndex(h=>h.includes('Fecha Desem')),monto:headers.indexOf('Monto'),plz:headers.indexOf('Plz'),frecPago:headers.findIndex(h=>h.includes('Frec Pago')),montoCuota:headers.findIndex(h=>h.includes('Monto Cuota')),mora:headers.indexOf('Mora'),totalAtraso:headers.findIndex(h=>h.includes('Total Atraso')),diaAtr:headers.findIndex(h=>h.includes('Dia Atr')),totalDeuda:headers.findIndex(h=>h.includes('Total Deuda'))};console.log('Mapeo de columnas:',columnMap);console.log('Headers encontrados:',headers);for(let i=headerRowIndex+1;i<rowMatches.length;i++){const cells=extractCellContent(rowMatches[i]);if(cells.length>columnMap.id&&cells[columnMap.id]){data.push(cells);}}}else{const workbook=XLSX.read(new Uint8Array(fileContent),{type:'array',cellDates:false,raw:true});const firstSheet=workbook.Sheets[workbook.SheetNames[0]];const jsonData=XLSX.utils.sheet_to_json(firstSheet,{header:1,raw:true});if(jsonData.length<2){alert('El archivo Excel está vacío o no tiene el formato correcto');return;}const headers=jsonData[0];console.log('Headers encontrados:',headers);columnMap={id:headers.indexOf('Id'),nombre:headers.indexOf('Nombre'),telefono:headers.findIndex(h=>h&&h.toString().includes('Tel')),fechaDesem:headers.findIndex(h=>h&&h.toString().includes('Fecha Desem')),monto:headers.indexOf('Monto'),plz:headers.indexOf('Plz'),frecPago:headers.findIndex(h=>h&&h.toString().includes('Frec Pago')),montoCuota:headers.findIndex(h=>h&&h.toString().includes('Monto Cuota')),mora:headers.indexOf('Mora'),totalAtraso:headers.findIndex(h=>h&&h.toString().includes('Total Atraso')),diaAtr:headers.findIndex(h=>h&&h.toString().includes('Dia Atr')),totalDeuda:headers.findIndex(h=>h&&h.toString().includes('Total Deuda'))};data=jsonData.slice(1);}let updatedCount=0;let addedCount=0;let errorCount=0;const errors=[];for(let i=0;i<data.length;i++){const row=data[i];if(!row[columnMap.id]||!row[columnMap.nombre])continue;try{const id=row[columnMap.id].toString().trim();const name=cleanText(row[columnMap.nombre].toString().trim());const phone=columnMap.telefono>=0&&row[columnMap.telefono]?row[columnMap.telefono].toString().trim():'';const disbursementDate=columnMap.fechaDesem>=0&&row[columnMap.fechaDesem]?formatExcelDate(row[columnMap.fechaDesem]):'';const monto=columnMap.monto>=0&&row[columnMap.monto]?parseExcelNumber(row[columnMap.monto]):0;const term=columnMap.plz>=0&&row[columnMap.plz]?parseInt(row[columnMap.plz]):0;const frequency=columnMap.frecPago>=0&&row[columnMap.frecPago]?mapFrequency(row[columnMap.frecPago].toString().trim()):'';const quota=columnMap.montoCuota>=0&&row[columnMap.montoCuota]?parseExcelNumber(row[columnMap.montoCuota]):0;const mora=columnMap.mora>=0&&row[columnMap.mora]?parseExcelNumber(row[columnMap.mora]):0;const totalAtraso=columnMap.totalAtraso>=0&&row[columnMap.totalAtraso]?parseExcelNumber(row[columnMap.totalAtraso]):0;const diasAtraso=columnMap.diaAtr>=0&&row[columnMap.diaAtr]?parseInt(row[columnMap.diaAtr]):0;
@@ -540,16 +539,18 @@ function init(){
     importExcelClients();
     setToday();
     updateDisplay();
-    setupAutoSync();
+    // setupAutoSync(); // Comentado para sincronización manual
     showLastSyncTime();
     
-    // Sincronización inicial si hay conexión
+    // Sincronización inicial deshabilitada para modo manual
+    /*
     if (navigator.onLine && GOOGLE_SHEET_ID !== 'TU_ID_DE_GOOGLE_SHEETS_AQUÍ') {
         setTimeout(() => {
             console.log('Ejecutando sincronización inicial...');
             syncWithGoogleSheets();
         }, 1000);
     }
+    */
     
     document.addEventListener('click',function(e){
         if(!e.target.closest('.form-group')){
@@ -608,11 +609,6 @@ function deleteAllClients(){
     
     // Primera confirmación
     if(!confirm(`⚠️ ADVERTENCIA: Esta acción eliminará ${clientCount} socios.\n\nSe mantendrán ${paymentCount} pagos en el historial.\n\n¿Estás seguro de continuar?`)){
-        return;
-    }
-    
-    // Segunda confirmación para mayor seguridad
-    if(!confirm('⚠️ ÚLTIMA CONFIRMACIÓN:\n\n¿Realmente deseas eliminar TODOS los socios?\n\nEsta acción no se puede deshacer.')){
         return;
     }
     

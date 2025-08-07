@@ -46,6 +46,7 @@
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden; /* Previene el scroll horizontal global */
         }
         
         /* --- ENCABEZADO --- */
@@ -58,9 +59,10 @@
             align-items: center;
             justify-content: center;
             gap: 15px;
-            position: sticky;
+            position: sticky; /* <- ASEGURA QUE EL HEADER SEA FIJO */
             top: 0;
             z-index: 100;
+            width: 100%;
         }
         .header .logo {
             font-size: 28px;
@@ -224,7 +226,8 @@
         /* --- LISTA DE CLIENTES --- */
         .clients-container, .payments-container, .search-results {
             max-height: 400px;
-            overflow-y: auto;
+            overflow-y: auto; /* Solo scroll vertical */
+            overflow-x: hidden; /* Previene scroll horizontal */
             -webkit-overflow-scrolling: touch;
         }
         .client-item {
@@ -410,7 +413,6 @@
         .search-results {
             margin-top: 5px;
             max-height: 300px;
-            overflow-y: auto;
             background: var(--white);
             border: 1px solid var(--medium-gray);
             border-radius: 8px;
@@ -540,7 +542,7 @@
 
         /* --- TABLA DE MOROSIDAD Y CRONOGRAMA --- */
         .responsive-table-container {
-            overflow-x: auto;
+            overflow-x: auto; /* Permite scroll horizontal SOLO para la tabla si es necesario */
             -webkit-overflow-scrolling: touch;
         }
         .styled-table {
@@ -553,6 +555,7 @@
             padding: 12px 15px;
             border: 1px solid var(--medium-gray);
             text-align: left;
+            white-space: nowrap; /* Evita que el texto de la tabla se rompa en varias líneas */
         }
         .styled-table th {
             background-color: var(--primary-color);
@@ -569,7 +572,8 @@
             background-color: #f1f1f1;
         }
         #morosidadModal .modal-content, #scheduleModal .modal-content {
-            max-width: 90%;
+            max-width: 95%;
+            width: auto;
         }
         
     </style>

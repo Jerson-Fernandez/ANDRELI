@@ -870,9 +870,9 @@
                 <div class="form-group">
                     <label class="form-label">Tipo de Pago</label>
                     <div class="payment-type-selector">
-                        <div class="payment-type-btn" onclick="selectPaymentType(this,'efectivo')"><div class="icon">💵</div><div class="label">Efectivo</div></div>
-                        <div class="payment-type-btn" onclick="selectPaymentType(this,'yape')"><div class="icon">📱</div><div class="label">Yape</div></div>
-                        <div class="payment-type-btn" onclick="selectPaymentType(this,'parcial')"><div class="icon">💰</div><div class="label">Parcial</div></div>
+                        <div class="payment-type-btn" onclick="selectPaymentType('efectivo')"><div class="icon">💵</div><div class="label">Efectivo</div></div>
+                        <div class="payment-type-btn" onclick="selectPaymentType('yape')"><div class="icon">📱</div><div class="label">Yape</div></div>
+                        <div class="payment-type-btn" onclick="selectPaymentType('parcial')"><div class="icon">💰</div><div class="label">Parcial</div></div>
                     </div>
                 </div>
                 <div id="paymentInputsContainer" style="display:none;">
@@ -1045,7 +1045,7 @@ function updateMapMarkers() {
     markers.forEach(marker => map.removeLayer(marker));
     markers = [];
     
-    const mapDateInput = document.getElementById('mapDateFilter'); const selectedDate = mapDateInput ? mapDateInput.value : getPeruvianDateString();
+    const selectedDate = document.getElementById('mapDateFilter').value;
     const dayPayments = payments.filter(p => p.date === selectedDate);
     
     let bounds = [];
@@ -1132,77 +1132,14 @@ function showClientMovements(clientId){const client=clients.find(c=>c.id===clien
 function deleteClientFromDetails(clientId){if(confirm('¿Estás seguro de eliminar este socio? Se mantendrán los pagos históricos.')){clients=clients.filter(c=>c.id!==clientId);saveData();updateDisplay();closeModal('clientDetailsModal');}}
 function getNextPaymentDate(client){if(!client.disbursementDate){return'N/A';}const today=getPeruvianDateString();const todayParts=today.split('-');const todayDate=new Date(parseInt(todayParts[0]),parseInt(todayParts[1])-1,parseInt(todayParts[2]));for(let i=1;i<=60;i++){const checkDate=new Date(todayDate);checkDate.setDate(checkDate.getDate()+i);const checkDateStr=`${checkDate.getFullYear()}-${String(checkDate.getMonth()+1).padStart(2,'0')}-${String(checkDate.getDate()).padStart(2,'0')}`;if(shouldPayOnDate(client,checkDateStr)){return`${String(checkDate.getDate()).padStart(2,'0')}/${String(checkDate.getMonth()+1).padStart(2,'0')}/${checkDate.getFullYear()}`;}}return'N/A';}
 function shouldPayOnDate(client,checkDate){if(!client.disbursementDate||!client.frequency){return false;}const[disbYear,disbMonth,disbDay]=client.disbursementDate.split('-').map(n=>parseInt(n));const[checkYear,checkMonth,checkDay]=checkDate.split('-').map(n=>parseInt(n));if(isNaN(disbYear)||isNaN(disbMonth)||isNaN(disbDay)||isNaN(checkYear)||isNaN(checkMonth)||isNaN(checkDay)){console.warn('Fecha inválida en shouldPayOnDate:',client.disbursementDate,checkDate);return false;}const disbursementDate=new Date(disbYear,disbMonth-1,disbDay);const targetDate=new Date(checkYear,checkMonth-1,checkDay);if(targetDate<=disbursementDate){return false;}const daysDiff=Math.floor((targetDate-disbursementDate)/(1000*60*60*24));const dayOfWeek=targetDate.getDay();switch(client.frequency){case'DIARIO':return dayOfWeek>=1&&dayOfWeek<=5&&daysDiff>=1;case'SEMANAL':return daysDiff>0&&daysDiff%7===0;case'QUINCENAL':return daysDiff>0&&daysDiff%15===0;case'MENSUAL':if(daysDiff<28)return false;const monthsDiff=(checkYear-disbYear)*12+(checkMonth-disbMonth);if(monthsDiff<1)return false;if(checkDay===disbDay){return true;}const lastDayOfTargetMonth=new Date(checkYear,checkMonth,0).getDate();if(checkDay===lastDayOfTargetMonth&&disbDay>lastDayOfTargetMonth){return true;}if(disbDay>28&&checkDay===lastDayOfTargetMonth){return true;}return false;default:console.warn('Frecuencia no reconocida:',client.frequency);return false;}}
-
-function loadData(){
-    try {
-        const savedClients = localStorage.getItem('clients');
-        if (savedClients) clients = JSON.parse(savedClients);
-        else clients = [];
-    } catch(e){
-        console.warn('No se pudieron cargar "clients" de localStorage:', e);
-        clients = [];
-    }
-    try {
-        const savedPayments = localStorage.getItem('payments');
-        if (savedPayments) payments = JSON.parse(savedPayments);
-        else payments = [];
-    } catch(e){
-        console.warn('No se pudieron cargar "payments" de localStorage:', e);
-        payments = [];
-    }
-}
-
+function loadData(){const savedClients=localStorage.getItem('clients');const savedPayments=localStorage.getItem('payments');if(savedClients)clients=JSON.parse(savedClients);if(savedPayments)payments=JSON.parse(savedPayments);}
 function saveData(){localStorage.setItem('clients',JSON.stringify(clients));localStorage.setItem('payments',JSON.stringify(payments));}
 function setToday(){const today=getPeruvianDateString();document.getElementById('dateFilter').value=today;updateDisplay();}
 function updateDisplay(){const selectedDate=document.getElementById('dateFilter').value;updateStats(selectedDate);updateDebtClients();updateClientsList(selectedDate);updatePaymentsList(selectedDate);}
 function updateDebtClients(){const debtClients=clients.filter(c=>c.diasAtraso>0);const debtSection=document.getElementById('debtClientsSection');const debtList=document.getElementById('debtClientsList');if(debtClients.length===0){debtSection.style.display='none';return;}debtSection.style.display='block';debtList.innerHTML=debtClients.sort((a,b)=>b.diasAtraso-a.diasAtraso).map(client=>{return`<div class="client-item" onclick="showClientDetailsModal('${client.id}')"><div style="flex:1;"><div class="client-name">${client.name}</div><div class="client-info-sub"><span class="client-status status-pending" style="background: #fdedec; color: #e74c3c;">${client.diasAtraso} días atraso</span><span style="color: #e74c3c;">Total: S/${formatNumber(client.totalAtraso||0)}</span></div></div><button class="btn-circle pay" onclick="event.stopPropagation();quickPaymentDebt('${client.id}');" title="Pago rápido"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1zm7 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/><path d="M0 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1z"/></svg></button></div>`;}).join('');}
 function updateStats(date){const dayPayments=payments.filter(p=>p.date===date);const total=dayPayments.reduce((sum,p)=>sum+p.amount,0);const uniqueClients=new Set(dayPayments.map(p=>p.clientId)).size;const cashTotal=dayPayments.filter(p=>p.method==='efectivo').reduce((sum,p)=>sum+p.amount,0);const yapeTotal=dayPayments.filter(p=>p.method==='yape').reduce((sum,p)=>sum+p.amount,0);document.getElementById('totalPaid').textContent=`S/${formatNumber(total)}`;document.getElementById('clientsPaid').textContent=formatInteger(uniqueClients);document.getElementById('totalCash').textContent=`S/${formatNumber(cashTotal)}`;document.getElementById('totalYape').textContent=`S/${formatNumber(yapeTotal)}`;}
 function updateClientsList(date){const clientsList=document.getElementById('clientsList');const dayPayments=payments.filter(p=>p.date===date);const clientsToPayToday=clients.filter(client=>shouldPayOnDate(client,date));if(clientsToPayToday.length===0){clientsList.innerHTML='<div class="empty-state" style="padding: 40px; text-align: center; color: #888;">No hay socios que deban pagar hoy</div>';return;}clientsList.innerHTML=clientsToPayToday.map(client=>{const clientPayments=dayPayments.filter(p=>p.clientId===client.id);const hasPaid=clientPayments.length>0;const totalPaid=clientPayments.reduce((sum,p)=>sum+p.amount,0);const displayQuota=client.diasAtraso>0?client.totalAtraso:client.quota;const freqClass={'DIARIO':'freq-diario','SEMANAL':'freq-semanal','QUINCENAL':'freq-quincenal','MENSUAL':'freq-mensual'}[client.frequency];return`<div class="client-item" onclick="showClientDetailsModal('${client.id}')"><div style="flex:1;"><div class="client-name">${client.name}</div><div class="client-info-sub"><span class="client-status ${hasPaid?'status-paid':'status-pending'}">${hasPaid?'Pagó':'Pendiente'}</span><span class="frequency-badge ${freqClass}">${client.frequency}</span><span style="font-weight: 600; color: var(--primary-color);">S/${formatNumber(displayQuota)}</span></div>${hasPaid?`<div style="font-size:12px;color:var(--success-color); margin-top: 4px;">Pagó: S/${formatNumber(totalPaid)}</div>`:''}</div><div class="client-actions"><button class="btn-circle pay" onclick="event.stopPropagation();quickPayment('${client.id}');" title="Pago rápido"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1zm7 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/><path d="M0 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1z"/></svg></button></div></div>`;}).join('');}
-
-function selectPaymentType(el, type){
-    selectedPaymentType = type;
-
-    const buttons = document.querySelectorAll('.payment-type-btn');
-    buttons.forEach(btn => btn.classList.remove('active'));
-    if (el && el.classList) el.classList.add('active');
-
-    document.getElementById('paymentInputsContainer').style.display = 'block';
-
-    const clientId = document.getElementById('selectedClientId').value;
-    let client = null;
-    if (clientId) client = clients.find(c => c.id === clientId);
-
-    function setSingle(label, value){
-        document.getElementById('partialPaymentInputs').style.display = 'none';
-        document.getElementById('singlePaymentInputs').style.display = 'block';
-        document.getElementById('singlePaymentLabel').textContent = label;
-        document.getElementById('paymentAmountSingle').value = (typeof value !== 'undefined' && value !== null) ? value : '';
-    }
-
-    if (type === 'parcial'){
-        document.getElementById('singlePaymentInputs').style.display = 'none';
-        document.getElementById('partialPaymentInputs').style.display = 'block';
-        if (client){
-            const montoSugerido = client.diasAtraso > 0 ? (client.totalAtraso || 0) : (client.quota || 0);
-            document.getElementById('paymentAmountCash').value = montoSugerido || '0';
-            document.getElementById('paymentAmountYape').value = '0';
-            updatePaymentTotal();
-        } else {
-            document.getElementById('paymentAmountCash').value = '0';
-            document.getElementById('paymentAmountYape').value = '0';
-            updatePaymentTotal();
-        }
-    } else if (type === 'efectivo'){
-        const label = '💵 Monto en Efectivo';
-        const value = client ? (client.diasAtraso > 0 ? (client.totalAtraso || 0) : (client.quota || 0)) : '';
-        setSingle(label, value);
-    } else if (type === 'yape'){
-        const label = '📱 Monto en Yape';
-        const value = client ? (client.diasAtraso > 0 ? (client.totalAtraso || 0) : (client.quota || 0)) : '';
-        setSingle(label, value);
-    }
-}
-else{document.getElementById('partialPaymentInputs').style.display='none';document.getElementById('singlePaymentInputs').style.display='block';const label=type==='efectivo'?'💵 Monto en Efectivo':'📱 Monto en Yape';document.getElementById('singlePaymentLabel').textContent=label;document.getElementById('paymentAmountSingle').value=montoSugerido||'';}}}else{if(type==='parcial'){document.getElementById('singlePaymentInputs').style.display='none';document.getElementById('partialPaymentInputs').style.display='block';document.getElementById('paymentAmountCash').value='0';document.getElementById('paymentAmountYape').value='0';updatePaymentTotal();}else{document.getElementById('partialPaymentInputs').style.display='none';document.getElementById('singlePaymentInputs').style.display='block';const label=type==='efectivo'?'💵 Monto en Efectivo':'📱 Monto en Yape';document.getElementById('singlePaymentLabel').textContent=label;document.getElementById('paymentAmountSingle').value='';}}}
+function selectPaymentType(type){selectedPaymentType=type;const buttons=document.querySelectorAll('.payment-type-btn');buttons.forEach(btn=>btn.classList.remove('active'));event.target.closest('.payment-type-btn').classList.add('active');document.getElementById('paymentInputsContainer').style.display='block';const clientId=document.getElementById('selectedClientId').value;if(clientId){const client=clients.find(c=>c.id===clientId);if(client){const montoSugerido=client.diasAtraso>0?client.totalAtraso:client.quota;if(type==='parcial'){document.getElementById('singlePaymentInputs').style.display='none';document.getElementById('partialPaymentInputs').style.display='block';document.getElementById('paymentAmountCash').value=montoSugerido||'0';document.getElementById('paymentAmountYape').value='0';updatePaymentTotal();}else{document.getElementById('partialPaymentInputs').style.display='none';document.getElementById('singlePaymentInputs').style.display='block';const label=type==='efectivo'?'💵 Monto en Efectivo':'📱 Monto en Yape';document.getElementById('singlePaymentLabel').textContent=label;document.getElementById('paymentAmountSingle').value=montoSugerido||'';}}}else{if(type==='parcial'){document.getElementById('singlePaymentInputs').style.display='none';document.getElementById('partialPaymentInputs').style.display='block';document.getElementById('paymentAmountCash').value='0';document.getElementById('paymentAmountYape').value='0';updatePaymentTotal();}else{document.getElementById('partialPaymentInputs').style.display='none';document.getElementById('singlePaymentInputs').style.display='block';const label=type==='efectivo'?'💵 Monto en Efectivo':'📱 Monto en Yape';document.getElementById('singlePaymentLabel').textContent=label;document.getElementById('paymentAmountSingle').value='';}}}
 function updatePaymentTotal(){const cashAmount=parseFloat(document.getElementById('paymentAmountCash').value)||0;const yapeAmount=parseFloat(document.getElementById('paymentAmountYape').value)||0;const total=cashAmount+yapeAmount;document.getElementById('paymentTotal').textContent=`S/${formatNumber(total)}`;}
 function updatePaymentsList(date){const paymentsList=document.getElementById('paymentsList');const dayPayments=payments.filter(p=>p.date===date);if(dayPayments.length===0){paymentsList.innerHTML='<div class="empty-state" style="padding: 40px; text-align: center; color: #888;">No hay pagos registrados</div>';return;}const groupedPayments={};dayPayments.forEach(payment=>{if(!groupedPayments[payment.timestamp]){groupedPayments[payment.timestamp]=[];}groupedPayments[payment.timestamp].push(payment);});const sortedGroups=Object.entries(groupedPayments).sort((a,b)=>new Date(b[0])-new Date(a[0]));paymentsList.innerHTML=sortedGroups.map(([timestamp,paymentGroup])=>{const client=clients.find(c=>c.id===paymentGroup[0].clientId);const totalAmount=paymentGroup.reduce((sum,p)=>sum+p.amount,0);const hasCash=paymentGroup.some(p=>p.method==='efectivo');const hasYape=paymentGroup.some(p=>p.method==='yape');const isMixed=hasCash&&hasYape;let methodDisplay='';if(isMixed){const cashAmount=paymentGroup.filter(p=>p.method==='efectivo').reduce((sum,p)=>sum+p.amount,0);const yapeAmount=paymentGroup.filter(p=>p.method==='yape').reduce((sum,p)=>sum+p.amount,0);methodDisplay=`<span class="payment-method method-mixto">Mixto</span><div style="font-size:11px;color:#666;margin-top:3px;">Efectivo: S/${formatNumber(cashAmount)} | Yape: S/${formatNumber(yapeAmount)}</div>`;}else{const payment=paymentGroup[0];const methodClass=payment.method==='yape'?'method-yape':'method-efectivo';const methodText=payment.method==='yape'?'Yape':'Efectivo';methodDisplay=`<span class="payment-method ${methodClass}">${methodText}</span>`;}return`<div class="payment-item"><div style="font-size: 11px; color: #888; margin-bottom: 4px;">ID: ${client ? client.id : 'N/A'}</div><div class="payment-client"><span>${client?client.name:'Socio eliminado'}</span><span class="payment-amount">S/${formatNumber(totalAmount)}</span></div><div class="payment-details"><span>${paymentGroup[0].note||'Sin nota'}</span>${methodDisplay}</div><div class="payment-details"><span>${formatPeruvianTime(paymentGroup[0].timestamp)}</span><button class="btn btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="deletePaymentGroup('${timestamp}')">Eliminar</button></div></div>`;}).join('');}
 function showClientDropdown(){const dropdown=document.getElementById('clientDropdown');dropdown.style.display='block';filterModalClients();}
